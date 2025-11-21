@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cometa - Personalização - Designer 3D</title>
+
+    <!-- THREE / GLTF / Lottie (mesmos que você já tinha) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.14/lottie.min.js"></script>
+
+    <!-- Iconify (carrega ícones via https / CDN e injeta SVG inline) -->
+    <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+       /* ======================= */
+/*   FUNDO ESPAÇO PREMIUM  */
+/* ======================= */
+
+body {
+    background: #0a0612; /* Preto profundo com leve roxo */
+    color: #fff;
+    overflow-x: hidden;
+    position: relative;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* Fundo cinematográfico (galáxia suave) */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle at 50% 20%,
+        rgba(122, 79, 255, 0.25) 0%,
+        rgba(50, 0, 90, 0.5) 25%,
+        rgba(0, 0, 0, 0.9) 70%
+    );
+    filter: blur(0px);
+    z-index: -3;
+}
+
+/* Camada de estrelas premium */
+#starsLayer {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    pointer-events: none;
+}
+
+#starsLayer {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.6;
+    background: white;
+    width: var(--size);
+    height: var(--size);
+    filter: blur(1px);
+    animation: twinkle var(--duration) ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+    0% { opacity: 0.2; }
+    100% { opacity: 0.8; }
+}
+
+
+/* ===== Nebulosas Premium ===== */
+
+/* Nebulosa cinematográfica com 3 camadas de roxo */
+.nebula {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(160px);
+    opacity: 0.06;
+    animation: nebulaSlow 45s infinite ease-in-out;
+    z-index: -1;
+}
+
+@keyframes nebulaSlow {
+    0% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(40px,-30px) scale(1.1); }
+    100% { transform: translate(0,0) scale(1); }
+}
+
+.nebula1 {
+    top: 20%;
+    left: 10%;
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, rgba(160,110,255,0.5), transparent);
+}
+
+.nebula2 {
+    bottom: 10%;
+    right: 15%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(110,50,200,0.5), transparent);
+}
+
+
+/* =============================== */
+/*   GALÁXIA MINIMALISTA PREMIUM   */
+/* =============================== */
+
+body {
+    background: #050008; /* preto violeta elegante */
+    color: #fff;
+    overflow-x: hidden;
+    position: relative;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* brilho suave no topo (mínimo) */
+body::before {
+    content: "";
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    width: 180%;
+    height: 180%;
+    transform: translateX(-50%);
+    background: radial-gradient(
+        circle,
+        rgba(120, 80, 200, 0.12) 0%,
+        rgba(40, 0, 70, 0.35) 35%,
+        rgba(0, 0, 0, 0.95) 80%
+    );
+    z-index: -3;
+}
+
+.comet {
+    position: fixed;
+    top: -10vh;
+    left: 110vw;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: -1;
+
+    animation: cometSoft var(--duration) linear infinite;
+    opacity: 0;
+
+    transform: rotate(-45deg);
+}
+
+.comet::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -200px;
+    width: 200px;
+    height: 3px;
+
+    background: linear-gradient(
+        90deg,
+        rgba(180,130,255,0.5),
+        rgba(120,70,200,0.2),
+        rgba(0,0,0,0)
+    );
+
+    filter: blur(3px);
+    border-radius: 10px;
+}
+
+@keyframes cometSoft {
+    0% { opacity: 0; transform: translate(0,0) rotate(-45deg); }
+    15% { opacity: 0.6; }
+    100% { opacity: 0; transform: translate(-150vw,150vh) rotate(-45deg); }
+}
+
+.comet.slow { --duration: 8s; }
+
+
+
+
+
+        
+        nav { background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(10px); padding: 1.5rem 2rem; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.3); }
+        .logo { font-size:1.8rem; font-weight:bold; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        nav ul { display:flex; gap:2rem; list-style:none; }
+        nav a { color:#fff; text-decoration:none; font-weight:500; transition:color .3s; }
+        nav a:hover { color:#667eea; }
+        .hero { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); padding:6rem 2rem; text-align:center; }
+        .hero h1 { font-size:3rem; margin-bottom:1rem; }
+        .hero p { font-size:1.3rem; opacity:0.9; }
+        .container { max-width:1400px; margin:0 auto; padding:2rem; }
+        .section { margin:4rem 0; }
+        .section h2 { font-size:2.5rem; margin-bottom:2rem; text-align:center; }
+
+        /* Designer 3D */
+        .designer-container { display:grid; grid-template-columns:1fr 400px; gap:2rem; background:#2d2d2d; border-radius:15px; padding:2rem; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .canvas-container { background:#1a1a1a; border-radius:10px; position:relative; height:600px; }
+        #canvas3d { width:100%; height:100%; border-radius:10px; display:block; }
+        .controls { display:flex; flex-direction:column; gap:1.5rem; max-height:600px; overflow-y:auto; padding-right:0.5rem; }
+        .control-group { background:#1a1a1a; padding:1.5rem; border-radius:10px; }
+        .control-group h3 { margin-bottom:1rem; color:#667eea; font-size:1.1rem; }
+        .shirt-types { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; }
+        .shirt-btn { padding:.8rem; background:#2d2d2d; border:2px solid #444; color:#fff; border-radius:8px; cursor:pointer; transition:all .3s; font-size:.9rem; }
+        .shirt-btn:hover { border-color:#667eea; } .shirt-btn.active { background:#667eea; border-color:#667eea; }
+
+        .colors { display:grid; grid-template-columns:repeat(6,1fr); gap:.5rem; margin-bottom:1rem; }
+        .color-btn { width:100%; aspect-ratio:1; border:3px solid transparent; border-radius:8px; cursor:pointer; transition:all .3s; }
+        .color-btn:hover { transform:scale(1.1); } .color-btn.active { border-color:#fff; box-shadow:0 0 15px rgba(255,255,255,0.5); }
+
+        .color-input-group { display:flex; gap:.5rem; align-items:center; }
+        .color-input-group input[type="text"] { flex:1; padding:.6rem; background:#2d2d2d; border:2px solid #444; color:#fff; border-radius:8px; font-family:monospace; font-size:.9rem; }
+        .color-input-group input[type="color"] { width:50px; height:40px; border:none; border-radius:8px; cursor:pointer; }
+
+        .btn { width:100%; padding:1rem; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; color:#fff; border-radius:10px; font-size:1rem; font-weight:bold; cursor:pointer; transition:all .3s; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 10px 25px rgba(102,126,234,0.3); }
+        .btn-secondary { background:#444; } .btn-secondary:hover { background:#555; }
+
+        .side-selector { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:1rem; }
+
+        /* Área de edição de design */
+        .design-canvas-area { background: repeating-linear-gradient(45deg,#2a2a2a 0px,#2a2a2a 10px,#333 10px,#333 20px); border-radius:10px; padding:1rem; min-height:300px; position:relative; overflow:hidden; }
+        .design-canvas { width:100%; height:300px; background:white; border-radius:8px; position:relative; overflow:hidden; }
+        .design-element { position:absolute; cursor:grab; user-select:none; touch-action:none; transform-origin: top left; }
+        .design-element.selected { outline:2px dashed #667eea; }
+        .design-element img { max-width:100%; height:auto; display:block; pointer-events:none; }
+        .design-element .text-content { font-size:24px; font-weight:bold; white-space:nowrap; padding:5px; pointer-events:none; }
+
+        /* resize/rotate handles */
+        .resize-handle, .rotate-handle {
+            position:absolute;
+            width:14px;
+            height:14px;
+            background:#333;
+            border:2px solid #fff;
+            border-radius:3px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.5);
+            z-index:9999;
+            display:none;
+        }
+        .design-element.selected .resize-handle,
+        .design-element.selected .rotate-handle {
+            display:block;
+        }
+        .resize-handle { right:-10px; bottom:-10px; cursor:se-resize; }
+        .rotate-handle { right:-10px; top:-25px; cursor:grab; border-radius:50%; }
+
+        .element-controls { display:grid; grid-template-columns:1fr; gap:.5rem; margin-top:1rem; }
+        .element-controls .delete-btn { padding:.6rem; background:#c0392b; border:2px solid #c0392b; color:#fff; border-radius:8px; cursor:pointer; transition:all .3s; }
+
+        .upload-btn-group { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:1rem; }
+        .upload-btn { padding:.8rem; background:#2d2d2d; border:2px solid #667eea; color:#fff; border-radius:8px; cursor:pointer; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+        .upload-btn:hover { background:#667eea; } .upload-btn input { display:none; }
+
+        /* Recent images gallery */
+        .recent-images { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.75rem; }
+        .recent-thumb {
+            width:60px; height:60px; border-radius:6px; overflow:hidden; background:#222; border:2px solid #444; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .recent-thumb img { max-width:100%; max-height:100%; display:block; }
+
+        .element-extra-controls { display:flex; gap:.5rem; align-items:center; margin-top:.6rem; }
+        .element-extra-controls label { font-size:0.85rem; color:#ccc; }
+        .element-extra-controls input[type="range"] { width:100%; }
+        .element-extra-controls input[type="number"] { width:80px; padding:.4rem; border-radius:6px; border:1px solid #444; background:#222; color:#fff; }
+
+        /* Modal */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; }
+        .modal.active { display:flex; } .modal-content { background:#2d2d2d; padding:2rem; border-radius:15px; max-width:500px; width:90%; } .modal-content h3 { color:#667eea; margin-bottom:1rem; }
+        .modal-content input, .modal-content select { width:100%; padding:.8rem; margin-bottom:1rem; background:#1a1a1a; border:2px solid #444; color:#fff; border-radius:8px; }
+
+        /* Produtos etc (unchanged) */
+        .products-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:2rem; }
+        .product-card { background:#2d2d2d; border-radius:15px; overflow:hidden; transition:all .3s; cursor:pointer; }
+        .product-card:hover { transform:translateY(-10px); box-shadow:0 15px 40px rgba(102,126,234,0.3); }
+        .product-img { width:100%; height:250px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); display:flex; align-items:center; justify-content:center; font-size:4rem; overflow:hidden; }
+        .product-img img { width:100%; height:100%; object-fit:cover; display:block; }
+
+        .product-info { padding:1.5rem; } .product-info h3 { margin-bottom:.5rem; } .product-info p { color:#aaa; margin-bottom:1rem; } .price { font-size:1.5rem; color:#667eea; font-weight:bold; }
+        .angle-buttons { display:grid; grid-template-columns:repeat(6,1fr); gap:.5rem; } .angle-btn { padding:.8rem .5rem; background:#2d2d2d; border:2px solid #444; color:#fff; border-radius:8px; cursor:pointer; transition:all .3s; font-size:.85rem; }
+        .angle-btn:hover, .angle-btn.active { border-color:#667eea; background:#667eea; }
+
+        .small-note { font-size:0.85rem; color:#bbb; margin-top:.5rem; }
+
+        /* Floating bubbles (Instagram + WhatsApp) */
+        .floating-bubbles {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 2200;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        /* bubble base */
+        .bubble {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            color: #fff;
+            text-decoration: none;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+            border: 3px solid rgba(255,255,255,0.06);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bubble:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 14px 30px rgba(0,0,0,0.5); }
+
+        .bubble.whatsapp { background: linear-gradient(135deg,#25D366 0%,#128C7E 100%); }
+        .bubble.instagram { background: linear-gradient(135deg,#F58529 0%,#DD2A7B 50%,#833AB4 100%); }
+
+        .bubble .label {
+            position: absolute;
+            right: 70px;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 0.95rem;
+            opacity: 0;
+            transform: translateX(6px);
+            transition: opacity .12s ease, transform .12s ease;
+            pointer-events: none;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+        }
+        .bubble:hover .label { opacity: 1; transform: translateX(0); }
+
+        .bubble .iconify {
+          width: 78%;
+          height: 78%;
+          display: block;
+        }
+        .bubble .iconify svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+          fill: #fff;
+        }
+
+        .bubble svg { width:28px; height:28px; display:block; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 6px 18px rgba(0,0,0,0.35); transform: scale(1); }
+            50% { box-shadow: 0 14px 30px rgba(0,0,0,0.5); transform: scale(1.04); }
+            100% { box-shadow: 0 6px 18px rgba(0,0,0,0.35); transform: scale(1); }
+        }
+        .bubble.pulse { animation: pulse 3s ease-in-out infinite; }
+
+        @media (max-width: 480px) {
+            .bubble .label { display: none; }
+            .floating-bubbles { right: 12px; bottom: 12px; gap: 8px; }
+            .bubble { width: 48px; height: 48px; }
+            .bubble .iconify { width: 72%; height: 72%; }
+            .bubble svg { width:22px; height:22px; }
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 2.6rem;
+            font-weight: bold;
+            background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+       .lottie-logo {
+    width: 200px;
+    height: 200px;
+    display: inline-block;
+    vertical-align: middle;
+    overflow: visible;
+    pointer-events: auto;
+    transform: scale(1.6);          /* 🍀 aumenta o meteoro */
+    transform-origin: center left;  /* mantém alinhado ao texto */
+}
+
+
+        @media (max-width: 480px) {
+            .lottie-logo {
+                width: 40px;
+                height: 40px;
+            }
+            .logo { font-size: 1.4rem; }
+        }
+
+        /* Additional styles for robust handles inside design-canvas */
+        .design-element .handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #1a1a1a;
+            border-radius: 3px;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 9999;
+        }
+        .design-element.selected .handle { display: block; }
+        .handle.rotate {
+            width: 14px; height: 14px; border-radius: 50%; background: #111; border:3px solid #fff; cursor:grab;
+        }
+        .handle.tl { left: 0%; top: 0%; cursor: nwse-resize; }
+        .handle.tr { left: 100%; top: 0%; cursor: nesw-resize; }
+        .handle.bl { left: 0%; top: 100%; cursor: nesw-resize; }
+        .handle.br { left: 100%; top: 100%; cursor: nwse-resize; }
+        .handle.t { left: 50%; top: 0%; cursor: ns-resize; }
+        .handle.b { left: 50%; top: 100%; cursor: ns-resize; }
+        .handle.l { left: 0%; top: 50%; cursor: ew-resize; }
+        .handle.r { left: 100%; top: 50%; cursor: ew-resize; }
+        .handle.rotate { left: 100%; top: -18px; transform: translate(-50%, -50%); }
+    </style>
+</head>
+<body>
+    <div class="background-light"></div>
+    
+
+
+
+   <!-- Fundo espacial sutil com estrelas e nebulosas roxas -->
+   <div class="stars-layer" id="starsLayer"></div>
+   <div class="nebula nebula1"></div>
+   <div class="nebula nebula2"></div>
+   <div class="nebula nebula3"></div>
+   
+   <nav>
+  <div class="brand" style="display:flex; align-items:center; gap:12px;">
+    <div class="logo">Cometa -Personalização</div>
+    <div id="lottieLogo" class="lottie-logo" aria-hidden="true" title="Animação Cometa"></div>
+  </div>
+
+  <ul>
+    <li><a href="#home">Início</a></li>
+    <li><a href="#designer">Designer 3D</a></li>
+    <li><a href="#produtos">Produtos</a></li>
+    <li><a href="#contato">Contato</a></li>
+  </ul>
+</nav>
+
+<script>
+  (function() {
+    const lottiePath = './assets/animations/Meteor.json';
+
+    function loadHeaderLottie() {
+      if (typeof lottie === 'undefined') {
+        console.warn('lottie não carregado');
+        return;
+      }
+      const container = document.getElementById('lottieLogo');
+      if (!container) return;
+
+      const anim = lottie.loadAnimation({
+        container: container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: lottiePath,
+        rendererSettings: {
+          preserveAspectRatio: 'xMidYMid meet'
+        }
+      });
+
+      container.addEventListener('mouseenter', () => {
+        try { anim.pause(); } catch(e){/*ignore*/ }
+      });
+      container.addEventListener('mouseleave', () => {
+        try { anim.play(); } catch(e){/*ignore*/ }
+      });
+
+      container.setAttribute('role','img');
+      container.setAttribute('aria-label','Animação do logotipo Cometa');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadHeaderLottie);
+    } else {
+      loadHeaderLottie();
+    }
+  })();
+</script>
+
+    <div class="hero" id="home">
+        <h1>Crie Sua Camiseta Personalizada</h1>
+        <p>Você pensa a gente estampa, faça seu modelo inserindo a imagem na blusa, depois é só mandar em
+Nosso WhatsApp ou Instagram
+</p>
+    </div>
+
+    <div class="container">
+        <section class="section" id="designer">
+            <h2>Designer de Camisetas 3D</h2>
+            <div class="designer-container">
+                <div class="canvas-container">
+                    <canvas id="canvas3d"></canvas>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>Tipo de Camiseta</h3>
+                        <div class="shirt-types">
+                            <button class="shirt-btn active" data-type="polo">Gola Polo</button>
+                            <button class="shirt-btn" data-type="normal">Normal</button>
+                            <button class="shirt-btn" data-type="long">Manga Longa</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Cores</h3>
+                        <div class="colors">
+                            <button class="color-btn" style="background:#8B0000;" data-color="#8B0000"></button>
+                            <button class="color-btn" style="background:#FF0000;" data-color="#FF0000"></button>
+                            <button class="color-btn" style="background:#FF8C00;" data-color="#FF8C00"></button>
+                            <button class="color-btn" style="background:#FFB6C1;" data-color="#FFB6C1"></button>
+                            <button class="color-btn" style="background:#FFFF00;" data-color="#FFFF00"></button>
+                            <button class="color-btn active" style="background:#7FFF00;" data-color="#7FFF00"></button>
+
+                            <button class="color-btn" style="background:#1E90FF;" data-color="#1E90FF"></button>
+                            <button class="color-btn" style="background:#4169E1;" data-color="#4169E1"></button>
+                            <button class="color-btn" style="background:#228B22;" data-color="#228B22"></button>
+                            <button class="color-btn" style="background:#4B0082;" data-color="#4B0082"></button>
+                            <button class="color-btn" style="background:#C0C0C0;" data-color="#C0C0C0"></button>
+                            <button class="color-btn" style="background:#000000;" data-color="#000000"></button>
+                        </div>
+                        <div class="color-input-group">
+                            <span style="font-size:1.2rem;">⚙️</span>
+                            <input type="text" id="customColorInput" placeholder="#FFFFFF" value="#7FFF00">
+                            <input type="color" id="colorPicker" value="#7FFF00">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Adicionar Design</h3>
+                        <div class="side-selector">
+                            <button class="shirt-btn active" id="frontSide">Frente</button>
+                            <button class="shirt-btn" id="backSide">Costas</button>
+                        </div>
+
+                        <div class="upload-btn-group">
+                            <label class="upload-btn">
+                                <span>📷 Imagem</span>
+                                <input type="file" id="imageUpload" accept="image/*">
+                            </label>
+                            <button class="upload-btn" onclick="openTextModal()">
+                                <span>📝 Texto</span>
+                            </button>
+                        </div>
+
+                        <div style="margin-top:.6rem;">
+                            <label style="display:inline-flex; gap:.5rem; align-items:center; color:#ccc;">
+                                <input type="checkbox" id="flipXCheckbox" title="Corrigir espelhamento (horizontal)">
+                                <span style="font-size:0.9rem;">Corrigir espelhamento horizontal (flip X)</span>
+                            </label>
+                        </div>
+
+                        <div class="small-note">Agora você pode ajustar imagens e textos puxando pelas alças (cantos/lados) diretamente no quadro de edição. Clique para selecionar.</div>
+
+                        <div class="recent-container" style="margin-top:.8rem;">
+                            <h3 style="margin:.5rem 0 .6rem 0; color:#67a3ff; font-size:0.95rem;">Imagens recentes</h3>
+                            <div id="recentImages" class="recent-images"></div>
+                        </div>
+
+                        <div class="design-canvas-area">
+                            <div class="design-canvas" id="designCanvas"></div>
+                            <div class="small-note">Clique na imagem/texto para selecionar, arraste para mover. Use as alças em cada canto/lado para redimensionar e o círculo acima para girar. (Semelhante ao Printonator)</div>
+                        </div>
+
+                        <div class="element-controls">
+                            <button class="delete-btn" onclick="deleteSelected()">🗑️ Remover Selecionado</button>
+                        </div>
+
+                        <div class="element-extra-controls">
+                            <label for="scaleRange">Escala:</label>
+                            <input type="range" id="scaleRange" min="0.1" max="3" step="0.01" value="1" style="width:120px;">
+                            <label for="textSizeInput" style="margin-left:6px;">Tamanho (px):</label>
+                            <input type="number" id="textSizeInput" min="6" max="200" value="24">
+                            <button class="btn btn-secondary" id="removeBgBtn" style="width:150px; margin-left:6px;" onclick="removeBackgroundSelected()" title="Remover fundo da imagem selecionada">🪄 Remover Fundo</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Ângulos de Visualização</h3>
+                        <div class="angle-buttons">
+                            <button class="angle-btn" data-angle="0">0°</button>
+                            <button class="angle-btn" data-angle="45">45°</button>
+                            <button class="angle-btn" data-angle="90">90°</button>
+                            <button class="angle-btn active" data-angle="180">180°</button>
+                            <button class="angle-btn" data-angle="270">270°</button>
+                            <button class="angle-btn" data-angle="315">315°</button>
+                        </div>
+                        <div style="margin-top:0.8rem;">
+                            <button class="btn" id="rotate360Btn" onclick="toggleContinuousRotation()">🔄 Rotação contínua</button>
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="applyDesignToShirt()">✅ Aplicar à Camiseta</button>
+                    <button class="btn" onclick="downloadImage()">📸 Baixar Imagem 3D</button>
+                    <button class="btn btn-secondary" onclick="resetDesign()">🔄 Resetar Tudo</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="produtos">
+            <h2>Outros Produtos</h2>
+            <div class="products-grid">
+                 <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/blusa.png" alt="BLUSA ALGODÃO TRADICIONAL">
+                    </div>
+                    <div class="product-info">
+                        <h3>BLUSA ALGODÃO TRADICIONAL</h3>
+                        <p>Várias cores disponíveis</p>
+                        <div class="price">R$ 37,99</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/blusa4.png" alt="Copo Stanley">
+                    </div>
+                    <div class="product-info">
+                        <h3> CROPPED OVERSIZED</h3>
+                        <p>Várias cores disponíveis</p>
+                        <div class="price">R$ 39,99</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/blusa3.png" alt="GOLA POLO POLIÉSTER">
+                    </div>
+                    <div class="product-info">
+                        <h3>GOLA POLO POLIÉSTER</h3>
+                        <p>Várias cores disponíveis</p>
+                        <div class="price">R$ 39,99</div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/blusa2.png" alt="BLUSA OVERSIZE">
+                    </div>
+                    <div class="product-info">
+                        <h3>BLUSA OVERSIZE</h3>
+                        <p>Várias cores disponíveis</p>
+                        <div class="price">R$ 44,99</div>
+                    </div>
+                </div>
+              <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/caneca1.png" alt="CANECA BRANCA PORCELANA">
+                    </div>
+                    <div class="product-info">
+                        <h3> CANECA BRANCA PORCELANA
+</h3>
+                        <p></p>
+                        <div class="price">R$ 26,99</div>
+                    </div>
+                </div>
+                    <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/caneca2.png" alt="CANECA MAGICA">
+                    </div>
+                    <div class="product-info">
+                        <h3>CANECA MAGICA
+</h3>
+                        <p></p>
+                        <div class="price">R$ 29,99</div>
+                    </div>
+                </div>
+                    <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/caneca3.png" alt="CANECA FUNDO COLORIDO">
+                    </div>
+                    <div class="product-info">
+                        <h3> CANECA FUNDO
+ COLORIDO</h3>
+                        <p></p>
+                        <div class="price">R$ 29,99</div>
+                    </div>
+                </div>
+                    <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/caneca4.png" alt="CANECA COM FUNDO COLORIDO E COLHER">
+                    </div>
+                    <div class="product-info">
+                        <h3> CANECA COM FUNDO
+ COLORIDO E COLHER</h3>
+                        <p></p>
+                        <div class="price">R$ 29,99</div>
+                    </div>
+                </div>
+                    <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/garrafa.png" alt="GARRAFA SQUEZZE 500 ml">
+                    </div>
+                    <div class="product-info">
+                        <h3>GARRAFA SQUEZZE
+ 500 ml</h3>
+                        <p></p>
+                        <div class="price">R$ 29,99</div>
+                    </div>
+                </div>
+                  <div class="product-card">
+                    <div class="product-img">
+                        <img src="./assets/logo/ceramica.png" alt="CERÂMICA 20X20">
+                    </div>
+                    <div class="product-info">
+                        <h3>CERÂMICA 20X20</h3>
+                        <p></p>
+                        <div class="price">R$ 19,99</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal" id="textModal">
+        <div class="modal-content">
+            <h3>Adicionar Texto</h3>
+            <input type="text" id="textInput" placeholder="Digite seu texto" />
+            <select id="fontSelect">
+                <option value="Arial">Arial</option>
+                <option value="Impact">Impact</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+            </select>
+            <input type="color" id="textColorPicker" value="#000000" />
+            <div class="modal-buttons">
+                <button class="btn" onclick="addText()">Adicionar</button>
+                <button class="btn btn-secondary" onclick="closeTextModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+   <!-- Floating bubbles: agora usam Iconify (SVG via https CDN) -->
+   <div class="floating-bubbles" aria-hidden="false">
+      <a class="bubble whatsapp pulse" id="whatsappBubble"
+         href="https://wa.me/5585981501747
+?text=Olá%20Cometa!%20Quero%20saber%20sobre%20personalização."
+         target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp" title="WhatsApp">
+        <!-- Iconify injeta o SVG do ícone WhatsApp via CDN -->
+        <span class="iconify" data-icon="simple-icons:whatsapp" data-inline="false"></span>
+        <span class="label">WhatsApp</span>
+      </a>
+
+      <a class="bubble instagram" id="instagramBubble"
+         href="https://www.instagram.com/cometa_personalizacoes?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+         target="_blank" rel="noopener noreferrer" aria-label="Abrir Instagram" title="Instagram">
+        <!-- Iconify injeta o SVG do ícone Instagram via CDN -->
+        <span class="iconify" data-icon="simple-icons:instagram" data-inline="false"></span>
+        <span class="label">Instagram</span>
+      </a>
+    </div>
+
+    <script>
+        const SHIRT_MODELS = {
+            polo: './assets/models/collar.glb',
+            normal: './assets/models/normal.glb',
+            long: './assets/models/long.glb'
+        };
+        const MODEL_CONFIG = { scale:2.0, position:{x:0,y:0,z:0}, rotation:{x:0,y:Math.PI,z:0} };
+
+        let scene, camera, renderer, shirt;
+        let currentShirtType = 'polo';
+        let currentColor = '#7FFF00';
+        let currentSide = 'front';
+        let isDragging = false;
+        let previousMousePosition = { x:0, y:0 };
+        let gltfLoader = null;
+        let loadedModels = {};
+        let useGLBModels = true;
+
+        // design elements: now each element has side, scaleX, scaleY
+        let designElements = { front: [], back: [] };
+        let selectedElement = null;
+        let elementIdCounter = 0;
+
+        let recentImages = [];
+        const imageCache = new Map();
+
+        let rafScheduled = false;
+        function scheduleTextureUpdate() {
+            if (rafScheduled) return;
+            rafScheduled = true;
+            requestAnimationFrame(async () => {
+                await applyDesignToShirt();
+                rafScheduled = false;
+            });
+        }
+
+        let cameraTarget = new THREE.Vector3(0,0,0);
+        let initialCameraZ = 5;
+        let minCameraZ = 2;
+        let maxCameraZ = 10;
+
+        let continuousRotation = false;
+        let rotationSpeed = Math.PI * 0.25;
+        let lastAnimateTime = 0;
+
+        // New flag to control horizontal flip to correct mirroring
+        let textureFlipX = true; // default: correct the mirrored issue
+
+        let resizing = null;
+        let rotating = null;
+
+        function safeDisposeTexture(tex) {
+            try {
+                if (tex && typeof tex.dispose === 'function') tex.dispose();
+            } catch(e) { /* ignore */ }
+        }
+
+        function clearMaterialMaps(mat) {
+            if (!mat) return;
+            try {
+                safeDisposeTexture(mat.normalMap);
+                safeDisposeTexture(mat.displacementMap);
+                safeDisposeTexture(mat.bumpMap);
+                safeDisposeTexture(mat.roughnessMap);
+                safeDisposeTexture(mat.metalnessMap);
+                safeDisposeTexture(mat.aoMap);
+                safeDisposeTexture(mat.emissiveMap);
+                safeDisposeTexture(mat.alphaMap);
+                mat.normalMap = null;
+                mat.displacementMap = null;
+                mat.bumpMap = null;
+                mat.roughnessMap = null;
+                mat.metalnessMap = null;
+                mat.aoMap = null;
+                mat.emissiveMap = null;
+                mat.alphaMap = null;
+                if (mat.normalScale && typeof mat.normalScale.set === 'function') mat.normalScale.set(0,0);
+                if ('displacementScale' in mat) mat.displacementScale = 0;
+                if ('roughness' in mat) mat.roughness = Math.max(0, mat.roughness ?? 1);
+                if ('metalness' in mat) mat.metalness = Math.min(0, mat.metalness ?? 0);
+                mat.needsUpdate = true;
+            } catch (e) {
+                console.warn('Erro ao limpar mapas do material', e);
+            }
+        }
+
+        function init() {
+            const canvas = document.getElementById('canvas3d');
+            const container = canvas.parentElement;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+            cameraTarget.set(0,0,0);
+            initialCameraZ = camera.position.z;
+            minCameraZ = initialCameraZ * 0.4;
+            maxCameraZ = initialCameraZ * 4;
+
+            renderer = new THREE.WebGLRenderer({ 
+                canvas, 
+                antialias: true, 
+                preserveDrawingBuffer: true,
+                powerPreference: "high-performance",
+                alpha: false,
+                stencil: false,
+                depth: true
+            });
+
+            const pixelRatio = Math.min(window.devicePixelRatio, 3);
+            renderer.setPixelRatio(pixelRatio);
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras suaves
+
+            if (THREE && THREE.sRGBEncoding) {
+                renderer.outputEncoding = THREE.sRGBEncoding;
+            }
+            
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
+            scene.add(ambientLight);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2); 
+            keyLight.position.set(3, 4, 5); 
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 4096;
+            keyLight.shadow.mapSize.height = 4096;
+            keyLight.shadow.camera.near = 0.5;
+            keyLight.shadow.camera.far = 20;
+            keyLight.shadow.bias = -0.0001;
+            scene.add(keyLight);
+
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.6); 
+            fillLight.position.set(-4, 2, -3); 
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            rimLight.position.set(0, 3, -5);
+            scene.add(rimLight);
+
+            createShirt();
+
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('wheel', onWheel, { passive:false });
+
+            document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
+
+            document.getElementById('scaleRange').addEventListener('input', (e) => {
+                if (!selectedElement) return;
+                const v = parseFloat(e.target.value);
+                // Update both scales to keep slider uniform-scaling behaviour
+                selectedElement.scaleX = v;
+                selectedElement.scaleY = v;
+                renderDesignCanvas();
+                scheduleTextureUpdate();
+            });
+
+            document.getElementById('textSizeInput').addEventListener('input', (e) => {
+                if (!selectedElement) return;
+                const v = parseInt(e.target.value, 10) || 12;
+                if (selectedElement.type === 'text') {
+                    selectedElement.data.size = v;
+                    renderDesignCanvas();
+                    scheduleTextureUpdate();
+                }
+            });
+
+            // flip checkbox
+            const flipCheckbox = document.getElementById('flipXCheckbox');
+            if (flipCheckbox) {
+                flipCheckbox.checked = textureFlipX;
+                flipCheckbox.addEventListener('change', (e) => {
+                    textureFlipX = !!e.target.checked;
+                    scheduleTextureUpdate();
+                });
+            }
+
+            animate();
+            renderRecentImages();
+            renderDesignCanvas(); // build editor UI
+        }
+
+        function fitCameraToObject(object, offset = 1.15) {
+            const box = new THREE.Box3().setFromObject(object);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            cameraTarget.copy(center);
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = camera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim * offset / (2 * Math.tan(fov / 2)));
+            if (cameraZ === 0 || !isFinite(cameraZ)) cameraZ = initialCameraZ;
+
+            camera.position.set(center.x, center.y, center.z + cameraZ);
+            camera.lookAt(center);
+            camera.updateProjectionMatrix();
+
+            initialCameraZ = camera.position.z;
+            minCameraZ = Math.max(0.5, initialCameraZ * 0.35);
+            maxCameraZ = initialCameraZ * 4;
+        }
+
+        function createShirt() {
+            if (shirt) scene.remove(shirt);
+
+            if (!useGLBModels) {
+                createDefaultShirt();
+                return;
+            }
+
+            const modelPath = SHIRT_MODELS[currentShirtType];
+
+            if (loadedModels[currentShirtType]) {
+                shirt = loadedModels[currentShirtType].clone();
+                applyColorToModel(shirt, currentColor);
+                const targetY = currentSide === 'front' ? 0 : Math.PI;
+                shirt.rotation.set(MODEL_CONFIG.rotation.x, targetY, MODEL_CONFIG.rotation.z);
+                shirt.position.set(MODEL_CONFIG.position.x, MODEL_CONFIG.position.y, MODEL_CONFIG.position.z);
+                shirt.scale.set(MODEL_CONFIG.scale, MODEL_CONFIG.scale, MODEL_CONFIG.scale);
+                shirt.traverse((child) => {
+                    if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+                });
+                scene.add(shirt);
+                fitCameraToObject(shirt, 1.15);
+                applyDesignToShirt();
+                return;
+            }
+
+            if (!gltfLoader && typeof THREE.GLTFLoader !== 'undefined') {
+                gltfLoader = new THREE.GLTFLoader();
+            }
+
+            if (modelPath && gltfLoader) {
+                gltfLoader.load(
+                    modelPath,
+                    (gltf) => {
+                        shirt = gltf.scene;
+                        loadedModels[currentShirtType] = gltf.scene.clone();
+
+                        applyColorToModel(shirt, currentColor);
+                        const targetY = currentSide === 'front' ? 0 : Math.PI;
+                        shirt.rotation.set(MODEL_CONFIG.rotation.x, targetY, MODEL_CONFIG.rotation.z);
+                        shirt.position.set(MODEL_CONFIG.position.x, MODEL_CONFIG.position.y, MODEL_CONFIG.position.z);
+                        shirt.scale.set(MODEL_CONFIG.scale, MODEL_CONFIG.scale, MODEL_CONFIG.scale);
+
+                        shirt.traverse((child) => {
+                            if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+                        });
+
+                        scene.add(shirt);
+                        fitCameraToObject(shirt, 1.15);
+                        applyDesignToShirt();
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Erro ao carregar modelo:', error);
+                        createDefaultShirt();
+                    }
+                );
+            } else {
+                createDefaultShirt();
+            }
+        }
+
+        function createDefaultShirt() {
+            const geometry = new THREE.BoxGeometry(2, 2.5, 0.5);
+            const material = new THREE.MeshPhongMaterial({ color: currentColor, flatShading:false });
+            shirt = new THREE.Mesh(geometry, material);
+            shirt.castShadow = true;
+            shirt.rotation.y = (currentSide === 'front') ? 0 : Math.PI;
+            scene.add(shirt);
+            fitCameraToObject(shirt, 1.1);
+            applyDesignToShirt();
+        }
+
+        function applyColorToModel(model, color) {
+            if (!model || !model.traverse) {
+                if (model && model.material) model.material.color.setHex(parseInt(color.replace('#','0x')));
+                return;
+            }
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => { if (mat.color) mat.color.setHex(parseInt(color.replace('#','0x'))); });
+                    } else {
+                        if (child.material.color) child.material.color.setHex(parseInt(color.replace('#','0x')));
+                    }
+                }
+            });
+        }
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+            if (!lastAnimateTime) lastAnimateTime = time;
+            const dt = (time - lastAnimateTime) / 1000;
+            lastAnimateTime = time;
+
+            if (continuousRotation && shirt) {
+                shirt.rotation.y += rotationSpeed * dt;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Add element: now includes side, scaleX, scaleY
+        function addDesignElement(type, data) {
+            const element = {
+                id: elementIdCounter++,
+                type: type,
+                data: JSON.parse(JSON.stringify(data)), // clone to avoid shared references
+                side: currentSide || 'front',
+                x: 75,
+                y: 75,
+                scaleX: 1,
+                scaleY: 1,
+                rotation: 0
+            };
+            designElements[element.side].push(element);
+            if (type === 'image' && data && data.src) {
+                addToRecentImages(data.src);
+            }
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+            selectElement(element.id);
+        }
+
+        function addDesignElementFromRecent(src) {
+            const img = new Image();
+            img.onload = () => {
+                const maxDim = 300;
+                let w = img.naturalWidth;
+                let h = img.naturalHeight;
+                const ratio = Math.min(maxDim / w, maxDim / h, 1);
+                w = Math.round(w * ratio); h = Math.round(h * ratio);
+                addDesignElement('image', { src, width: w, height: h });
+            };
+            img.src = src;
+        }
+
+        function addToRecentImages(src) {
+            recentImages = recentImages.filter(s => s !== src);
+            recentImages.unshift(src);
+            if (recentImages.length > 12) recentImages.length = 12;
+            renderRecentImages();
+        }
+
+        function renderRecentImages() {
+            const el = document.getElementById('recentImages');
+            if (!el) return;
+            el.innerHTML = '';
+            recentImages.forEach(src => {
+                const div = document.createElement('div');
+                div.className = 'recent-thumb';
+                const img = document.createElement('img');
+                img.src = src;
+                div.appendChild(img);
+                div.title = 'Adicionar ao design';
+                div.addEventListener('click', () => addDesignElementFromRecent(src));
+                el.appendChild(div);
+            });
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imgTemp = new Image();
+                imgTemp.onload = () => {
+                    const maxDim = 300;
+                    let w = imgTemp.naturalWidth;
+                    let h = imgTemp.naturalHeight;
+                    const ratio = Math.min(maxDim / w, maxDim / h, 1);
+                    w = Math.round(w * ratio); h = Math.round(h * ratio);
+                    addDesignElement('image', { src: event.target.result, width: w, height: h });
+                };
+                imgTemp.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+
+        // renderDesignCanvas updated to use scaleX/scaleY and create handles per element
+        function renderDesignCanvas() {
+            const canvas = document.getElementById('designCanvas');
+            canvas.innerHTML = '';
+
+            const elements = designElements[currentSide];
+            elements.forEach(element => {
+                const div = document.createElement('div');
+                div.className = 'design-element';
+                div.dataset.id = element.id;
+                const elW = (element.data.width || 100) * (element.scaleX || 1);
+                const elH = (element.data.height || 100) * (element.scaleY || 1);
+
+                div.style.left = element.x + 'px';
+                div.style.top = element.y + 'px';
+                div.style.width = elW + 'px';
+                div.style.height = elH + 'px';
+                div.style.transform = `rotate(${element.rotation}deg)`;
+                div.style.position = 'absolute';
+                div.style.display = 'inline-block';
+                div.style.cursor = 'move';
+                div.style.userSelect = 'none';
+                div.style.boxSizing = 'border-box';
+
+                const content = document.createElement('div');
+                content.style.position = 'relative';
+                content.style.display = 'inline-block';
+                content.style.width = '100%';
+                content.style.height = '100%';
+                content.style.pointerEvents = 'none';
+
+                if (element.type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = element.data.src;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'contain';
+                    img.draggable = false;
+                    img.addEventListener('dragstart', ev => ev.preventDefault());
+                    content.appendChild(img);
+                } else if (element.type === 'text') {
+                    const span = document.createElement('span');
+                    span.className = 'text-content';
+                    span.textContent = element.data.text;
+                    span.style.fontFamily = element.data.font;
+                    span.style.color = element.data.color;
+                    span.style.fontSize = ((element.data.size || 24) * ((element.scaleX + element.scaleY)/2 || 1)) + 'px';
+                    content.appendChild(span);
+                }
+
+                // create handles: corners & mid-sides
+                const handles = ['tl','tr','bl','br','t','b','l','r'];
+                handles.forEach(h => {
+                    const hd = document.createElement('div');
+                    hd.className = 'handle ' + h;
+                    hd.dataset.handle = h;
+                    hd.addEventListener('pointerdown', (ev) => {
+                        ev.stopPropagation();
+                        ev.preventDefault();
+                        startResize(ev, element, h);
+                    });
+                    div.appendChild(hd);
+                });
+
+                // rotate
+                const rh = document.createElement('div');
+                rh.className = 'handle rotate';
+                rh.title = 'Girar';
+                rh.addEventListener('pointerdown', (ev) => {
+                    ev.stopPropagation(); ev.preventDefault(); startRotate(ev, element);
+                });
+                rh.style.left = '100%';
+                rh.style.top = '-18px';
+                div.appendChild(rh);
+
+                div.appendChild(content);
+
+                div.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    selectElement(element.id);
+                    startDrag(e, element);
+                });
+
+                if (selectedElement && selectedElement.id === element.id) {
+                    div.classList.add('selected');
+                }
+
+                canvas.appendChild(div);
+            });
+
+            if (selectedElement) {
+                updateElementControlsUI();
+            } else {
+                document.getElementById('scaleRange').value = 1;
+                document.getElementById('textSizeInput').value = 24;
+            }
+        }
+
+        function selectElement(id) {
+            const elements = designElements[currentSide];
+            selectedElement = elements.find(el => el.id === id) || null;
+            renderDesignCanvas();
+        }
+
+        let draggedElement = null;
+        let dragOffset = { x:0, y:0 };
+
+        function startDrag(e, element) {
+            const canvas = document.getElementById('designCanvas');
+            const rect = canvas.getBoundingClientRect();
+            draggedElement = element;
+            dragOffset.x = e.clientX - rect.left - element.x;
+            dragOffset.y = e.clientY - rect.top - element.y;
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+        }
+
+        function onDragMove(e) {
+            if (!draggedElement) return;
+            const canvas = document.getElementById('designCanvas');
+            const rect = canvas.getBoundingClientRect();
+
+            draggedElement.x = e.clientX - rect.left - dragOffset.x;
+            draggedElement.y = e.clientY - rect.top - dragOffset.y;
+
+            const realW = ((draggedElement.data && draggedElement.data.width) || 50) * (draggedElement.scaleX || 1);
+            const realH = ((draggedElement.data && draggedElement.data.height) || 20) * (draggedElement.scaleY || 1);
+
+            draggedElement.x = Math.max(0, Math.min(rect.width - realW, draggedElement.x));
+            draggedElement.y = Math.max(0, Math.min(rect.height - realH, draggedElement.y));
+
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+        }
+
+        function onDragEnd() {
+            draggedElement = null;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            scheduleTextureUpdate();
+        }
+
+        // Enhanced resize: supports independent scaleX/scaleY by handle
+        function startResize(ev, element, handle) {
+            const canvas = document.getElementById('designCanvas');
+            const rect = canvas.getBoundingClientRect();
+            ev.target.setPointerCapture && ev.target.setPointerCapture(ev.pointerId);
+            resizing = {
+                element,
+                handle,
+                startX: ev.clientX,
+                startY: ev.clientY,
+                startW: (element.data.width || 100) * (element.scaleX || 1),
+                startH: (element.data.height || 100) * (element.scaleY || 1),
+                startScaleX: element.scaleX || 1,
+                startScaleY: element.scaleY || 1,
+                startElementX: element.x,
+                startElementY: element.y,
+                canvasRect: rect
+            };
+            document.addEventListener('pointermove', onResizeMove);
+            document.addEventListener('pointerup', endResize);
+        }
+
+        function onResizeMove(ev) {
+            if (!resizing) return;
+            const { element, handle, startX, startY, startW, startH, startScaleX, startScaleY, startElementX, startElementY, canvasRect } = resizing;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+
+            let newScaleX = startScaleX;
+            let newScaleY = startScaleY;
+
+            if (handle === 'br') {
+                const newW = Math.max(10, startW + dx);
+                const newH = Math.max(10, startH + dy);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+            } else if (handle === 'bl') {
+                const newW = Math.max(10, startW - dx);
+                const newH = Math.max(10, startH + dy);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+                element.x = startElementX + (startW - (element.data.width || 100) * newScaleX);
+            } else if (handle === 'tr') {
+                const newW = Math.max(10, startW + dx);
+                const newH = Math.max(10, startH - dy);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+                element.y = startElementY + (startH - (element.data.height || 100) * newScaleY);
+            } else if (handle === 'tl') {
+                const newW = Math.max(10, startW - dx);
+                const newH = Math.max(10, startH - dy);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+                element.x = startElementX + (startW - (element.data.width || 100) * newScaleX);
+                element.y = startElementY + (startH - (element.data.height || 100) * newScaleY);
+            } else if (handle === 't') {
+                const newH = Math.max(10, startH - dy);
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+                element.y = startElementY + (startH - (element.data.height || 100) * newScaleY);
+            } else if (handle === 'b') {
+                const newH = Math.max(10, startH + dy);
+                newScaleY = Math.max(0.05, newH / (element.data.height || 100));
+            } else if (handle === 'l') {
+                const newW = Math.max(10, startW - dx);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+                element.x = startElementX + (startW - (element.data.width || 100) * newScaleX);
+            } else if (handle === 'r') {
+                const newW = Math.max(10, startW + dx);
+                newScaleX = Math.max(0.05, newW / (element.data.width || 100));
+            }
+
+            // clamp inside editor
+            const maxW = canvasRect.width;
+            const maxH = canvasRect.height;
+            element.scaleX = newScaleX;
+            element.scaleY = newScaleY;
+            element.x = Math.max(0, Math.min(element.x, maxW - ((element.data.width||100) * element.scaleX)));
+            element.y = Math.max(0, Math.min(element.y, maxH - ((element.data.height||100) * element.scaleY)));
+
+            // update UI slider to reflect uniform average scale (keeps old UI)
+            const avgScale = (element.scaleX + element.scaleY) / 2;
+            document.getElementById('scaleRange').value = avgScale;
+
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+        }
+
+        function endResize(ev) {
+            if (!resizing) return;
+            document.removeEventListener('pointermove', onResizeMove);
+            document.removeEventListener('pointerup', endResize);
+            resizing = null;
+            scheduleTextureUpdate();
+        }
+
+        // rotation handlers (uses center of element)
+        function startRotate(ev, element) {
+            const canvas = document.getElementById('designCanvas');
+            const rect = canvas.getBoundingClientRect();
+
+            const elX = rect.left + element.x;
+            const elY = rect.top + element.y;
+            const elW = (element.data.width || 100) * (element.scaleX || 1);
+            const elH = (element.data.height || 100) * (element.scaleY || 1);
+            const centerX = elX + elW / 2;
+            const centerY = elY + elH / 2;
+
+            rotating = {
+                element,
+                centerX,
+                centerY,
+                startAngle: (element.rotation || 0) * Math.PI / 180,
+                startClientAngle: Math.atan2(ev.clientY - centerY, ev.clientX - centerX)
+            };
+
+            ev.target.setPointerCapture && ev.target.setPointerCapture(ev.pointerId);
+            document.addEventListener('pointermove', onRotateMove);
+            document.addEventListener('pointerup', endRotate);
+        }
+
+        function onRotateMove(ev) {
+            if (!rotating) return;
+            const { element, centerX, centerY, startAngle, startClientAngle } = rotating;
+            const currentClientAngle = Math.atan2(ev.clientY - centerY, ev.clientX - centerX);
+            const delta = currentClientAngle - startClientAngle;
+            const newAngleRad = startAngle + delta;
+            element.rotation = newAngleRad * 180 / Math.PI;
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+        }
+
+        function endRotate(ev) {
+            if (!rotating) return;
+            document.removeEventListener('pointermove', onRotateMove);
+            document.removeEventListener('pointerup', endRotate);
+            rotating = null;
+            scheduleTextureUpdate();
+        }
+
+        function updateElementControlsUI() {
+            const scaleRange = document.getElementById('scaleRange');
+            const textSizeInput = document.getElementById('textSizeInput');
+            const removeBgBtn = document.getElementById('removeBgBtn');
+
+            if (!selectedElement) {
+                scaleRange.value = 1;
+                textSizeInput.value = 24;
+                removeBgBtn.style.display = 'none';
+                return;
+            }
+
+            const avgScale = ((selectedElement.scaleX || 1) + (selectedElement.scaleY || 1)) / 2;
+            scaleRange.value = avgScale;
+
+            if (selectedElement.type === 'text') {
+                textSizeInput.value = selectedElement.data.size || 24;
+                removeBgBtn.style.display = 'none';
+            } else if (selectedElement.type === 'image') {
+                textSizeInput.value = Math.round(avgScale * 100);
+                removeBgBtn.style.display = 'inline-block';
+            } else {
+                removeBgBtn.style.display = 'none';
+            }
+        }
+
+        function deleteSelected() {
+            if (!selectedElement) return;
+            const elements = designElements[currentSide];
+            const index = elements.findIndex(el => el.id === selectedElement.id);
+            if (index > -1) {
+                elements.splice(index, 1);
+                selectedElement = null;
+                renderDesignCanvas();
+                scheduleTextureUpdate();
+            }
+        }
+
+        async function removeBackgroundSelected() {
+            if (!selectedElement || selectedElement.type !== 'image') return;
+            try {
+                const src = selectedElement.data.src;
+                const img = await loadImagePromise(src);
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0);
+
+                const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+                const data = imageData.data;
+
+                function sampleCorner(x, y, w, h) {
+                    const samples = [];
+                    const stepX = Math.max(1, Math.floor(w / 8));
+                    const stepY = Math.max(1, Math.floor(h / 8));
+                    for (let i = 0; i < 5; i++) {
+                        const sx = Math.min(w-1, Math.max(0, Math.floor(x + (i*stepX) % w)));
+                        const sy = Math.min(h-1, Math.max(0, Math.floor(y + (i*stepY) % h)));
+                        const idx = (sy * w + sx) * 4;
+                        samples.push([data[idx], data[idx+1], data[idx+2]]);
+                    }
+                    return samples;
+                }
+                const w = canvas.width, h = canvas.height;
+                const samples = [
+                    ...sampleCorner(0,0,w,h),
+                    ...sampleCorner(w-1,0,w,h),
+                    ...sampleCorner(0,h-1,w,h),
+                    ...sampleCorner(w-1,h-1,w,h)
+                ];
+                const avg = samples.reduce((acc, c) => { acc[0]+=c[0]; acc[1]+=c[1]; acc[2]+=c[2]; return acc; }, [0,0,0]).map(v=>Math.round(v/samples.length));
+
+                const threshold = 65;
+
+                function colorDist(r,g,b) {
+                    const dr = r - avg[0];
+                    const dg = g - avg[1];
+                    const db = b - avg[2];
+                    return Math.sqrt(dr*dr + dg*dg + db*db);
+                }
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i+1], b = data[i+2];
+                    const dist = colorDist(r,g,b);
+                    if (dist < threshold) {
+                        data[i+3] = 0;
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0);
+
+                const newSrc = canvas.toDataURL('image/png');
+                selectedElement.data.src = newSrc;
+                selectedElement.data.width = Math.round(canvas.width * Math.min(300/canvas.width,1));
+                selectedElement.data.height = Math.round(canvas.height * Math.min(300/canvas.height,1));
+
+                addToRecentImages(newSrc);
+
+                renderDesignCanvas();
+                scheduleTextureUpdate();
+
+                alert('Remoção de fundo aplicada (método simples). Se não ficar perfeito, use imagens com fundo uniforme ou me envie para solução avançada.');
+            } catch (err) {
+                console.error('Erro removendo fundo:', err);
+                alert('Não foi possível remover o fundo desta imagem.');
+            }
+        }
+
+        function loadImagePromise(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                // Se for data:URI, não tentamos setar crossOrigin
+                if (!src.startsWith('data:')) {
+                    img.crossOrigin = 'anonymous';
+                }
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+
+        // applyDesignToShirt with horizontal flip support (fixes mirrored result)
+        // Substitua toda a função applyDesignToShirt pela versão abaixo
+async function applyDesignToShirt() {
+    if (!shirt) return;
+    const designCanvasEl = document.getElementById('designCanvas');
+    const designRect = designCanvasEl.getBoundingClientRect();
+    if (designRect.width === 0 || designRect.height === 0) return;
+
+    // choose safe size
+    const maxTextureSize = (renderer && renderer.capabilities && renderer.capabilities.maxTextureSize) ? renderer.capabilities.maxTextureSize : 8192;
+    const preferredBase = 2048; // safe default
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const targetW = Math.min(Math.round(preferredBase * DPR), maxTextureSize);
+    const targetH = Math.min(Math.round(preferredBase * DPR), maxTextureSize);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    ctx.imageSmoothingEnabled = true;
+    try { ctx.imageSmoothingQuality = 'high'; } catch (e){}
+
+    // fill background with shirt color to simulate print area (optional)
+    ctx.fillStyle = currentColor || '#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // draw front and back side side-by-side (keeps compatibility with your UV layout)
+    const bothElements = [
+        { side: 'front', elements: designElements.front },
+        { side: 'back', elements: designElements.back }
+    ];
+
+    const allElements = [...designElements.front, ...designElements.back];
+    const loadPromises = allElements.map(el => {
+        if (el.type === 'image') {
+            const src = el.data.src;
+            if (imageCache.has(src)) {
+                const item = imageCache.get(src);
+                if (item.loaded) return Promise.resolve({ id: el.id, img: item.img });
+                return new Promise(resolve => item.onloadCallbacks.push(resolve));
+            } else {
+                const img = new Image();
+                if (!src.startsWith('data:')) img.crossOrigin = 'anonymous';
+                const cacheItem = { img:null, loaded:false, onloadCallbacks: [] };
+                imageCache.set(src, cacheItem);
+                return new Promise(resolve => {
+                    img.onload = () => {
+                        cacheItem.loaded = true; cacheItem.img = img;
+                        resolve({ id: el.id, img });
+                        cacheItem.onloadCallbacks.forEach(cb => cb({ id: el.id, img }));
+                        cacheItem.onloadCallbacks = [];
+                    };
+                    img.onerror = () => {
+                        cacheItem.loaded = true; cacheItem.img = null;
+                        resolve({ id: el.id, img: null });
+                        cacheItem.onloadCallbacks.forEach(cb => cb({ id: el.id, img: null }));
+                        cacheItem.onloadCallbacks = [];
+                    };
+                    img.src = src;
+                });
+            }
+        }
+        return Promise.resolve({ id: el.id, img: null, text: true });
+    });
+
+    const loaded = await Promise.all(loadPromises);
+    const imgMap = new Map();
+    loaded.forEach(r => { if (r && r.img) imgMap.set(r.id, r.img); });
+
+    const finalCanvasW = canvas.width;
+    const finalCanvasH = canvas.height;
+    const sxHalf = (finalCanvasW / 2) / designRect.width;
+    const sy = finalCanvasH / designRect.height;
+    const sAvg = (sxHalf + sy) / 2;
+
+    bothElements.forEach(bucket => {
+        // >>> ALTERAÇÃO CRÍTICA: algumas UVs têm a frente no lado direito do atlas.
+        // desenhar FRONT na metade DIREITA e BACK na metade ESQUERDA corrige o espelhamento observado.
+        const offsetX = (bucket.side === 'front') ? (finalCanvasW / 2) : 0;
+
+        const elements = bucket.elements || [];
+        elements.forEach(element => {
+            ctx.save();
+
+            const elW_editor = (element.data.width || 100) * (element.scaleX || element.scale || 1);
+            const elH_editor = (element.data.height || 100) * (element.scaleY || element.scale || 1);
+
+            const centerX_editor = element.x + elW_editor / 2;
+            const centerY_editor = element.y + elH_editor / 2;
+
+            const centerX_tex = offsetX + centerX_editor * sxHalf;
+            const centerY_tex = centerY_editor * sy;
+
+            const elW_tex = elW_editor * sxHalf;
+            const elH_tex = elH_editor * sy;
+
+            ctx.translate(centerX_tex, centerY_tex);
+            ctx.rotate((element.rotation || 0) * Math.PI / 180);
+
+            if (element.type === 'image') {
+                const img = imgMap.get(element.id);
+                if (img) {
+                    try {
+                        ctx.drawImage(img, -elW_tex / 2, -elH_tex / 2, elW_tex, elH_tex);
+                    } catch (e) {
+                        console.warn('Erro desenhando imagem no canvas de textura', e);
+                    }
+                }
+            } else if (element.type === 'text') {
+                const fontSize_editor = element.data.size || 24;
+                const fontSize_tex = Math.max(6, Math.round(fontSize_editor * sAvg));
+                ctx.font = `${fontSize_tex}px ${element.data.font || 'Arial'}`;
+                ctx.fillStyle = element.data.color || '#000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(element.data.text, 0, 0);
+            }
+
+            ctx.restore();
+        });
+    });
+
+    // Create THREE texture
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.flipY = false;
+    if (THREE && THREE.sRGBEncoding) texture.encoding = THREE.sRGBEncoding;
+
+    if (textureFlipX) {
+        texture.repeat.set(-1, 1);
+        texture.offset.x = 1;
+    } else {
+        texture.repeat.set(1,1);
+        texture.offset.x = 0;
+    }
+
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    const maxAniso = renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : (renderer.capabilities.maxAnisotropy || 1);
+    texture.anisotropy = Math.min(maxAniso || 1, 16);
+    texture.needsUpdate = true;
+
+    // Substitui materiais (mantive sua lógica)
+    if (shirt && shirt.traverse) {
+        shirt.traverse((child) => {
+            if (child.isMesh) {
+                try { if (child.material && child.material.map) child.material.map.dispose(); } catch(e){}
+                child.material = new THREE.MeshStandardMaterial({
+                    map: texture,
+                    color: 0xffffff,
+                    roughness: 0.65,
+                    metalness: 0.02,
+                    transparent: true,
+                    side: THREE.FrontSide
+                });
+                child.material.needsUpdate = true;
+            }
+        });
+    } else if (shirt && shirt.material) {
+        try { if (shirt.material.map) shirt.material.map.dispose(); } catch(e){}
+        shirt.material = new THREE.MeshStandardMaterial({
+            map: texture, color:0xffffff, roughness:0.7, metalness:0.1, transparent: true
+        });
+        shirt.material.needsUpdate = true;
+    }
+}
+
+        async function downloadImage() {
+            await applyDesignToShirt();
+            await new Promise(r => setTimeout(r, 100));
+            renderer.render(scene, camera);
+            const link = document.createElement('a');
+            link.download = 'minha-camiseta-3d.png';
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        function resetDesign() {
+            designElements = { front: [], back: [] };
+            selectedElement = null;
+            currentColor = '#7FFF00';
+            currentSide = 'front';
+            document.getElementById('customColorInput').value = '#7FFF00';
+            document.getElementById('colorPicker').value = '#7FFF00';
+            document.getElementById('frontSide').click();
+            renderDesignCanvas();
+            createShirt();
+        }
+
+        window.addEventListener('resize', () => {
+            const container = document.querySelector('.canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            // Atualiza pixelRatio caso a tela mude de DPR (opcional)
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
+            if (shirt) fitCameraToObject(shirt, 1.15);
+        });
+
+        function toggleContinuousRotation() {
+            continuousRotation = !continuousRotation;
+            const btn = document.getElementById('rotate360Btn');
+            if (continuousRotation) {
+                btn.textContent = '⏸️ Parar rotação';
+                btn.style.background = 'linear-gradient(135deg,#ffb347 0%,#ffcc33 100%)';
+            } else {
+                btn.textContent = '🔄 Rotação contínua';
+                btn.style.background = '';
+            }
+        }
+
+        document.querySelectorAll('.shirt-btn[data-type]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.shirt-btn[data-type]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentShirtType = btn.dataset.type;
+                createShirt();
+            });
+        });
+
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentColor = btn.dataset.color;
+                document.getElementById('customColorInput').value = currentColor;
+                document.getElementById('colorPicker').value = currentColor;
+                scheduleTextureUpdate();
+            });
+        });
+
+        document.getElementById('customColorInput').addEventListener('input', (e) => {
+            let value = e.target.value;
+            if (value.startsWith('#') && (value.length === 7 || value.length === 4)) {
+                currentColor = value; document.getElementById('colorPicker').value = value; scheduleTextureUpdate();
+            }
+        });
+        document.getElementById('colorPicker').addEventListener('input', (e) => {
+            currentColor = e.target.value; document.getElementById('customColorInput').value = currentColor; scheduleTextureUpdate();
+        });
+
+        document.querySelectorAll('.angle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const angle = parseInt(btn.dataset.angle, 10);
+                if (shirt) shirt.rotation.y = (angle * Math.PI) / 180;
+            });
+        });
+
+        document.getElementById('frontSide').addEventListener('click', () => {
+            document.getElementById('frontSide').classList.add('active');
+            document.getElementById('backSide').classList.remove('active');
+            currentSide = 'front';
+            if (shirt) shirt.rotation.y = 0;
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+        });
+
+        document.getElementById('backSide').addEventListener('click', () => {
+            document.getElementById('backSide').classList.add('active');
+            document.getElementById('frontSide').classList.remove('active');
+            currentSide = 'back';
+            if (shirt) shirt.rotation.y = Math.PI;
+            renderDesignCanvas();
+            scheduleTextureUpdate();
+        });
+
+        function onMouseDown(e) { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }
+        function onMouseMove(e) {
+            if (!isDragging || !shirt) return;
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+            shirt.rotation.y += deltaX * 0.01;
+            shirt.rotation.x += deltaY * 0.01;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        }
+        function onMouseUp() { isDragging = false; }
+
+        function onWheel(e) {
+            e.preventDefault();
+            const delta = e.deltaY * 0.01;
+            camera.position.z = Math.max(minCameraZ, Math.min(maxCameraZ, camera.position.z + delta));
+            camera.lookAt(cameraTarget);
+        }
+
+        function openTextModal() { document.getElementById('textModal').classList.add('active'); }
+        function closeTextModal() { document.getElementById('textModal').classList.remove('active'); }
+
+        function addText() {
+            const text = document.getElementById('textInput').value.trim();
+            const font = document.getElementById('fontSelect').value;
+            const color = document.getElementById('textColorPicker').value;
+            if (!text) return;
+            addDesignElement('text', { text, font, color, size: 24, width: 200, height: 60 });
+            document.getElementById('textInput').value = '';
+            closeTextModal();
+        }
+
+        init();
+        renderDesignCanvas();
+    </script>
+    <script>
+/* Estrelas minimalistas */
+function generateMinimalStars() {
+    const layer = document.getElementById("starsLayer");
+    layer.innerHTML = "";
+
+    const starCount = 140; // bem menos estrelas
+
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement("div");
+        star.classList.add("star");
+
+        star.style.setProperty("--size", (Math.random() * 1.5 + 0.5) + "px");
+        star.style.setProperty("--duration", (3 + Math.random() * 3) + "s");
+        star.style.top = Math.random() * 100 + "%";
+        star.style.left = Math.random() * 100 + "%";
+
+        layer.appendChild(star);
+    }
+}
+
+generateMinimalStars();
+
+
+/* Cometas raríssimos */
+function spawnRareComet() {
+    const body = document.body;
+    const comet = document.createElement("div");
+
+    comet.classList.add("comet", "slow");
+
+    comet.style.top = (-10 - Math.random() * 10) + "vh";
+    comet.style.left = (80 + Math.random() * 40) + "vw";
+
+    body.appendChild(comet);
+
+    // remove quando terminar
+    setTimeout(() => comet.remove(), 9000);
+
+    // intervalo grande entre cometas (10s -> 25s)
+    const next = 10000 + Math.random() * 15000;
+    setTimeout(spawnRareComet, next);
+}
+
+spawnRareComet();
+
+
+</script>
+
+</body>
+</html>
+
