@@ -243,6 +243,11 @@
             order: 1;
         }
         
+        /* Ajuste mínimo para telas muito pequenas: reduzimos a altura para caber melhor */
+        @media (max-width: 420px) {
+            .canvas-container { height: 52vh; min-height: 300px; }
+        }
+
         #canvas3d {
             width: 100%;
             height: 100%;
@@ -984,7 +989,7 @@
     <!-- Navegação Mobile-Friendly -->
     <nav>
         <div class="brand">
-            <div class="logo">Cometa</div>
+            <div class="logo">Cometa - Personalização</div>
             <div id="lottieLogo" class="lottie-logo" aria-hidden="true" title="Animação Cometa"></div>
         </div>
         
@@ -1026,6 +1031,7 @@ const mobilePanelContent = document.getElementById('mobilePanelContent');
 
 const panelContents = {
     shirt: `
+
         <div class="control-group">
             <h3>Tipo de Camiseta</h3>
             <div class="shirt-types">
@@ -1062,7 +1068,7 @@ const panelContents = {
                     <span>📷 Imagem</span>
                     <input type="file" id="mobileImageUpload" accept="image/*">
                 </label>
-                <button class="upload-btn" onclick="openTextModal()">
+                <button class="upload-btn" id="mobileTextOpenBtn">
                     <span>📝 Texto</span>
                 </button>
             </div>
@@ -1080,9 +1086,9 @@ const panelContents = {
     `,
     actions: `
         <div class="control-group">
-            <button class="btn" onclick="applyDesignToShirt()" style="width:100%; margin-bottom:0.8rem;">✅ Aplicar</button>
-            <button class="btn" onclick="downloadImage()" style="width:100%; margin-bottom:0.8rem;">📸 Baixar</button>
-            <button class="btn btn-secondary" onclick="resetDesign()" style="width:100%;">🔄 Resetar</button>
+            <button class="btn" id="mobileApply" style="width:100%; margin-bottom:0.8rem;">✅ Aplicar</button>
+            <button class="btn" id="mobileDownload" style="width:100%; margin-bottom:0.8rem;">📸 Baixar</button>
+            <button class="btn btn-secondary" id="mobileReset" style="width:100%;">🔄 Resetar</button>
         </div>
     `
 };
@@ -1097,6 +1103,7 @@ function loadMobilePanel(panelName) {
                 this.classList.add('active');
                 currentShirtType = this.dataset.type;
                 createShirt();
+                mobilePanel.classList.remove('active');
             });
         });
     } else if (panelName === 'color') {
@@ -1105,7 +1112,10 @@ function loadMobilePanel(panelName) {
                 document.querySelectorAll('.mobile-color').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentColor = this.dataset.color;
+                document.getElementById('customColorInput').value = currentColor;
+                document.getElementById('colorPicker').value = currentColor;
                 scheduleTextureUpdate();
+                mobilePanel.classList.remove('active');
             });
         });
     } else if (panelName === 'view') {
@@ -1115,10 +1125,28 @@ function loadMobilePanel(panelName) {
                 this.classList.add('active');
                 const angle = parseInt(this.dataset.angle, 10);
                 if (shirt) shirt.rotation.y = (angle * Math.PI) / 180;
+                mobilePanel.classList.remove('active');
             });
         });
     } else if (panelName === 'design') {
-        document.getElementById('mobileImageUpload')?.addEventListener('change', handleImageUpload);
+        const mobileFile = document.getElementById('mobileImageUpload');
+        if (mobileFile) {
+            mobileFile.addEventListener('change', handleImageUpload);
+        }
+        const mobileTextBtn = document.getElementById('mobileTextOpenBtn');
+        if (mobileTextBtn) {
+            mobileTextBtn.addEventListener('click', () => {
+                openTextModal();
+                mobilePanel.classList.remove('active');
+            });
+        }
+    } else if (panelName === 'actions') {
+        const applyBtn = document.getElementById('mobileApply');
+        const downloadBtn = document.getElementById('mobileDownload');
+        const resetBtn = document.getElementById('mobileReset');
+        if (applyBtn) applyBtn.addEventListener('click', () => { applyDesignToShirt(); mobilePanel.classList.remove('active'); });
+        if (downloadBtn) downloadBtn.addEventListener('click', () => { downloadImage(); mobilePanel.classList.remove('active'); });
+        if (resetBtn) resetBtn.addEventListener('click', () => { resetDesign(); mobilePanel.classList.remove('active'); });
     }
 }
 
@@ -1541,6 +1569,10 @@ if (window.innerWidth <= 768) {
                 stencil: false,
                 depth: true
             });
+
+            // expose renderer to global for mobile tuning
+            window.renderer = renderer;
+            window.camera = camera;
 
             const pixelRatio = Math.min(window.devicePixelRatio, 3);
             renderer.setPixelRatio(pixelRatio);
@@ -2227,7 +2259,6 @@ ctx.imageSmoothingQuality = 'high';
         }
 
         // applyDesignToShirt with horizontal flip support (fixes mirrored result)
-        // Substitua toda a função applyDesignToShirt pela versão abaixo
 async function applyDesignToShirt() {
     if (!shirt) return;
     const designCanvasEl = document.getElementById('designCanvas');
