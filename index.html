@@ -797,6 +797,31 @@
             display: none;
             z-index: 9999;
         }
+
+        /* toque/gestos: garante que touch não role a página ao interagir com elementos */
+.design-element {
+    touch-action: none;
+    -ms-touch-action: none;
+    cursor: grab;
+    user-select: none;
+    transform-origin: top left;
+    pointer-events: auto;
+}
+
+/* handles precisam aceitar pointer events e não bloquear o elemento pai */
+.design-element .handle {
+    touch-action: none;
+    -ms-touch-action: none;
+    pointer-events: auto;
+}
+
+/* área maior para tocar nos handles em mobile */
+@media (max-width: 900px) {
+    .design-element .handle {
+        width: 18px;
+        height: 18px;
+    }
+}
         
         .design-element.selected .handle {
             display: block;
@@ -899,12 +924,13 @@
         .handle.rotate { left: 100%; top: -18px; transform: translate(-50%, -50%); }
         
         /* Mobile-specific adjustments */
-    @media (max-width: 768px) {
+    /* Substitua o bloco @media (max-width: 768px) existente por este */
+@media (max-width: 768px) {
     /* Navigation */
     .mobile-menu-toggle {
         display: flex;
     }
-    
+
     nav ul {
         position: fixed;
         top: 0;
@@ -920,47 +946,82 @@
         align-items: center;
         justify-content: flex-start;
     }
-    
+
     nav ul.active {
         display: flex;
     }
-    
+
     nav ul li {
         width: 100%;
         text-align: center;
     }
-    
+
     nav a {
         display: block;
         padding: 1rem;
         font-size: 1.1rem;
         border-radius: 10px;
     }
-    
-    /* Canvas */
+
+    /* Canvas: reduzir altura para evitar "quadrado gigante" no mobile */
     .canvas-container {
-        height: 40vh;
-        min-height: 280px;
-        border-radius: 0;
+        height: 46vh; /* valor ajustado: ocupa menos da altura do ecrã no mobile */
+        min-height: 260px;
+        border-radius: 10px;
+        padding: 0.5rem;
     }
-    
-    /* Show mobile controls */
-    .mobile-control-tabs {
-        display: flex;
-    }
-    
+
+    /* Mostrar controles (deixar abaixo do canvas, em vez de escondê-los) */
     .controls {
+        display: block !important;
+        max-height: none;
+        overflow-y: visible;
+        padding: 0.8rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    /* Esconder abas flutuantes / modal mobile que movem conteúdo para "embaixo" */
+    .mobile-control-tabs {
+        display: none;
+    }
+    .mobile-panel {
         display: none !important;
     }
-    
+
     /* Floating bubbles */
     .floating-bubbles {
         right: 10px;
-        bottom: 70px;
+        bottom: 90px;
     }
 }
-        
-        /* Desktop adjustments */
+
+/* Floating quick FAB for opening editor on mobile */
+.mobile-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#6b8cff 0%,#7a66ff 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2350;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    pointer-events: auto;
+}
+
+/* Hide FAB on desktop */
+@media (min-width: 769px) {
+    .mobile-fab { display: none; }
+}
+
+/* Desktop adjustments */
         @media (min-width: 769px) {
             .designer-container {
                 grid-template-columns: 1fr 400px;
@@ -1094,6 +1155,7 @@ const panelContents = {
 };
 
 function loadMobilePanel(panelName) {
+    if (!mobilePanel || !mobilePanelContent) return;
     mobilePanelContent.innerHTML = panelContents[panelName];
     
     if (panelName === 'shirt') {
@@ -1103,6 +1165,9 @@ function loadMobilePanel(panelName) {
                 this.classList.add('active');
                 currentShirtType = this.dataset.type;
                 createShirt();
+                const mobileScaleFactor = (window.innerWidth <= 768) ? 0.6 : 1.0;
+const appliedScale = MODEL_CONFIG.scale * mobileScaleFactor;
+shirt.scale.set(appliedScale, appliedScale, appliedScale);
                 mobilePanel.classList.remove('active');
             });
         });
@@ -1159,13 +1224,16 @@ mobileTabs.forEach(tab => {
     });
 });
 
-mobilePanel.addEventListener('click', function(e) {
-    if (e.target === mobilePanel) {
-        mobilePanel.classList.remove('active');
-    }
-});
+if (mobilePanel) {
+    mobilePanel.addEventListener('click', function(e) {
+        if (e.target === mobilePanel) {
+            mobilePanel.classList.remove('active');
+        }
+    });
+}
 
-if (window.innerWidth <= 768) {
+if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
+    // load defaults lazily
     loadMobilePanel('shirt');
 }
     </script>
@@ -1315,6 +1383,10 @@ if (window.innerWidth <= 768) {
                 <div class="mobile-panel-handle"></div>
                 <div class="mobile-panel-content" id="mobilePanelContent"></div>
             </div>
+
+            <!-- QUICK MOBILE FAB (abre painel de edição) -->
+            <button id="mobileFab" class="mobile-fab" aria-label="Abrir editor">✎</button>
+
         </section>
 
         <section class="section" id="produtos">
@@ -1734,16 +1806,19 @@ if (window.innerWidth <= 768) {
             }
         }
 
-        function createDefaultShirt() {
-            const geometry = new THREE.BoxGeometry(2, 2.5, 0.5);
-            const material = new THREE.MeshPhongMaterial({ color: currentColor, flatShading:false });
-            shirt = new THREE.Mesh(geometry, material);
-            shirt.castShadow = true;
-            shirt.rotation.y = (currentSide === 'front') ? 0 : Math.PI;
-            scene.add(shirt);
-            fitCameraToObject(shirt, 1.1);
-            applyDesignToShirt();
-        }
+      function createDefaultShirt() {
+    const geometry = new THREE.BoxGeometry(2, 2.5, 0.5);
+    const material = new THREE.MeshPhongMaterial({ color: currentColor, flatShading:false });
+    shirt = new THREE.Mesh(geometry, material);
+    shirt.castShadow = true;
+    shirt.rotation.y = (currentSide === 'front') ? 0 : Math.PI;
+    const mobileScaleFactor = (window.innerWidth <= 768) ? 0.6 : 1.0;
+    const appliedScale = MODEL_CONFIG.scale * mobileScaleFactor;
+    shirt.scale.set(appliedScale, appliedScale, appliedScale);
+    scene.add(shirt);
+    fitCameraToObject(shirt, 1.1);
+    applyDesignToShirt();
+}
 
         function applyColorToModel(model, color) {
             if (!model || !model.traverse) {
@@ -1929,13 +2004,8 @@ if (window.innerWidth <= 768) {
 
                 div.appendChild(content);
 
-                div.addEventListener('mousedown', (e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    selectElement(element.id);
-                    startDrag(e, element);
-                });
+             div.addEventListener('pointerdown', (e) => { /* handler leve: o attachPointerHandlersToElement fará seleção e configuração */ });
+attachPointerHandlersToElement(div, element);
 
                 if (selectedElement && selectedElement.id === element.id) {
                     div.classList.add('selected');
@@ -1958,43 +2028,194 @@ if (window.innerWidth <= 768) {
             renderDesignCanvas();
         }
 
-        let draggedElement = null;
-        let dragOffset = { x:0, y:0 };
+       // --- BEGIN: Pointer-based drag + pinch/rotate gesture support ---
 
-        function startDrag(e, element) {
+// estado de ponteiros ativo (id -> {x,y})
+let activePointers = new Map();
+// se arrastando com 1 ponteiro
+let dragPointerId = null;
+let draggedElement = null;
+let dragOffset = { x:0, y:0 };
+
+// estado de gesto (pinch/rotate)
+let gestureState = null;
+
+function attachPointerHandlersToElement(div, element) {
+    // remove possíveis listeners anteriores (não obrigatório mas seguro)
+    div.onpointerdown = null;
+
+    div.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // foco / seleção
+        selectElement(element.id);
+
+        // capture do ponteiro para este elemento (bom para touch)
+        try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+
+        // guarda ponteiro ativo
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (activePointers.size === 1) {
+            // início de arraste com um dedo
+            dragPointerId = e.pointerId;
+            draggedElement = element;
             const canvas = document.getElementById('designCanvas');
             const rect = canvas.getBoundingClientRect();
-            draggedElement = element;
             dragOffset.x = e.clientX - rect.left - element.x;
             dragOffset.y = e.clientY - rect.top - element.y;
-            document.addEventListener('mousemove', onDragMove);
-            document.addEventListener('mouseup', onDragEnd);
-        }
 
-        function onDragMove(e) {
-            if (!draggedElement) return;
+            // adiciona listeners globais (pode haver outros ponteiros)
+            document.addEventListener('pointermove', onGlobalPointerMove, { passive:false });
+            document.addEventListener('pointerup', onGlobalPointerUp);
+            document.addEventListener('pointercancel', onGlobalPointerUp);
+        } else if (activePointers.size === 2) {
+            // início de gesto pinch/rotate
+            const pts = Array.from(activePointers.entries());
+            const pA = pts[0][1], pB = pts[1][1];
+            const centerX = (pA.x + pB.x) / 2;
+            const centerY = (pA.y + pB.y) / 2;
+            const dx = pB.x - pA.x, dy = pB.y - pA.y;
+            const dist = Math.hypot(dx, dy);
+            const angle = Math.atan2(dy, dx);
+
+            // grava estado inicial do gesto baseado no elemento selecionado
+            gestureState = {
+                pointerIds: pts.map(t => t[0]),
+                startDist: dist,
+                startAngle: angle,
+                startScaleX: element.scaleX || 1,
+                startScaleY: element.scaleY || 1,
+                startRotation: (element.rotation || 0) * Math.PI / 180,
+                elementCenterOffset: null,
+                targetElementId: element.id
+            };
+
+            // calcula centro do elemento em coordenadas do editor
             const canvas = document.getElementById('designCanvas');
             const rect = canvas.getBoundingClientRect();
+            const elW = ((element.data.width || 100) * (element.scaleX || 1));
+            const elH = ((element.data.height || 100) * (element.scaleY || 1));
+            const elCenterX = rect.left + element.x + elW / 2;
+            const elCenterY = rect.top + element.y + elH / 2;
+            gestureState.elementCenterOffset = { x: elCenterX - centerX, y: elCenterY - centerY };
+        }
+    });
+}
 
-            draggedElement.x = e.clientX - rect.left - dragOffset.x;
-            draggedElement.y = e.clientY - rect.top - dragOffset.y;
+// handler global de movimento de pointers
+function onGlobalPointerMove(e) {
+    e.preventDefault();
+    if (!activePointers.has(e.pointerId)) {
+        // às vezes pointermove chega sem pointerdown registrado (safety)
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    } else {
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
 
-            const realW = ((draggedElement.data && draggedElement.data.width) || 50) * (draggedElement.scaleX || 1);
-            const realH = ((draggedElement.data && draggedElement.data.height) || 20) * (draggedElement.scaleY || 1);
+    // se temos gesto de dois dedos ativo (gestureState) e os dois ponteiros ainda existem
+    if (gestureState && activePointers.size >= 2) {
+        const ids = gestureState.pointerIds;
+        if (activePointers.has(ids[0]) && activePointers.has(ids[1])) {
+            const p1 = activePointers.get(ids[0]);
+            const p2 = activePointers.get(ids[1]);
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            const dist = Math.hypot(dx, dy);
+            const angle = Math.atan2(dy, dx);
 
-            draggedElement.x = Math.max(0, Math.min(rect.width - realW, draggedElement.x));
-            draggedElement.y = Math.max(0, Math.min(rect.height - realH, draggedElement.y));
+            const scaleRatio = dist / Math.max(gestureState.startDist, 0.0001);
+            const newScaleX = Math.max(0.05, gestureState.startScaleX * scaleRatio);
+            const newScaleY = Math.max(0.05, gestureState.startScaleY * scaleRatio);
+            const deltaAngle = angle - gestureState.startAngle;
+            const newRotation = (gestureState.startRotation + deltaAngle) * 180 / Math.PI;
+
+            // aplica no elemento alvo (se ainda existir)
+            const targetElements = designElements.front.concat(designElements.back);
+            const target = targetElements.find(el => el.id === gestureState.targetElementId);
+            if (target) {
+                target.scaleX = newScaleX;
+                target.scaleY = newScaleY;
+                target.rotation = newRotation;
+                // opcional: reposicionar para manter o centro do gesto (mais natural)
+                // calcula novo centro do elemento e ajusta x/y
+                const canvas = document.getElementById('designCanvas');
+                const rect = canvas.getBoundingClientRect();
+                const centerX_screen = (p1.x + p2.x) / 2;
+                const centerY_screen = (p1.y + p2.y) / 2;
+                const elCenterOffset = gestureState.elementCenterOffset || { x:0, y:0 };
+                const desiredCenterX = centerX_screen + elCenterOffset.x;
+                const desiredCenterY = centerY_screen + elCenterOffset.y;
+                const elW = (target.data.width || 100) * (target.scaleX || 1);
+                const elH = (target.data.height || 100) * (target.scaleY || 1);
+                // novo x,y para que o centro fique no desiredCenter
+                target.x = Math.max(0, Math.min(rect.width - elW, desiredCenterX - rect.left - elW / 2));
+                target.y = Math.max(0, Math.min(rect.height - elH, desiredCenterY - rect.top - elH / 2));
+            }
 
             renderDesignCanvas();
             scheduleTextureUpdate();
+            return;
         }
+    }
 
-        function onDragEnd() {
-            draggedElement = null;
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('mouseup', onDragEnd);
-            scheduleTextureUpdate();
+    // se estamos arrastando com 1 ponteiro
+    if (dragPointerId !== null && activePointers.has(dragPointerId) && draggedElement) {
+        const p = activePointers.get(dragPointerId);
+        const canvas = document.getElementById('designCanvas');
+        const rect = canvas.getBoundingClientRect();
+
+        // atualiza posição com clamp nos limites
+        let nx = p.x - rect.left - dragOffset.x;
+        let ny = p.y - rect.top - dragOffset.y;
+
+        const realW = ((draggedElement.data && draggedElement.data.width) || 50) * (draggedElement.scaleX || 1);
+        const realH = ((draggedElement.data && draggedElement.data.height) || 20) * (draggedElement.scaleY || 1);
+
+        nx = Math.max(0, Math.min(rect.width - realW, nx));
+        ny = Math.max(0, Math.min(rect.height - realH, ny));
+
+        draggedElement.x = nx;
+        draggedElement.y = ny;
+
+        renderDesignCanvas();
+        scheduleTextureUpdate();
+    }
+}
+
+// pointer up / cancel
+function onGlobalPointerUp(e) {
+    // remove capture se disponível
+    try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch(err){}
+
+    activePointers.delete(e.pointerId);
+
+    // se o pointer que arrastava foi solto
+    if (dragPointerId === e.pointerId) {
+        dragPointerId = null;
+        draggedElement = null;
+        // remover listeners globais se não houver ponteiros ativos
+        if (activePointers.size === 0) {
+            document.removeEventListener('pointermove', onGlobalPointerMove);
+            document.removeEventListener('pointerup', onGlobalPointerUp);
+            document.removeEventListener('pointercancel', onGlobalPointerUp);
         }
+        scheduleTextureUpdate();
+    }
+
+    // se o gesto multi-touch terminou (menos de 2 pointers), encerra estado de gesto
+    if (gestureState && activePointers.size < 2) {
+        gestureState = null;
+        // se ainda houver um ponteiro remanescente, podemos reiniciar um arraste com ele
+        if (activePointers.size === 1) {
+            const remaining = Array.from(activePointers.keys())[0];
+            dragPointerId = remaining;
+            // draggedElement permanece selecionado (já cadastrado em selectElement)
+            const elements = designElements[currentSide];
+            draggedElement = elements.find(el => el.id === selectedElement?.id) || selectedElement || null;
+        }
+    }
+}
 
         // Enhanced resize: supports independent scaleX/scaleY by handle
         function startResize(ev, element, handle) {
@@ -2639,10 +2860,8 @@ async function applyDesignToShirt() {
 
   // adjust canvas heights and renderer DPR if renderer is global
   function tuneRendererForMobile() {
-    // expect renderer to be window.renderer created in your main script
     try {
       if (isMobile && window.renderer) {
-        // cap pixel ratio, reduce base render size
         window.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.2));
       } else if (window.renderer) {
         window.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
@@ -2657,11 +2876,11 @@ async function applyDesignToShirt() {
     const canvasContainer = document.querySelector('.canvas-container');
     if (!canvasContainer) return;
     if (isMobile) {
-      canvasContainer.style.height = `calc(100vh - 56px)`; // 56px header
+      // altura fixa razoável para mobile (mantém espaço abaixo para controles)
+      canvasContainer.style.height = '46vh';
     } else {
       canvasContainer.style.height = '';
     }
-    // also resize three.js renderer if available
     try {
       if (window.renderer && window.camera) {
         const rect = canvasContainer.getBoundingClientRect();
@@ -2673,55 +2892,30 @@ async function applyDesignToShirt() {
   }
 
   // init mobile adjustments
-  function initMobileUX() {
-    if (!isMobile) return;
-    const fab = createFAB();
-    moveControlsToModal();
+    function initMobileUX() {
+    // Não movemos controles para modal no mobile — deixamos o fluxo natural (canvas > controls).
     tuneRendererForMobile();
     adjustCanvasHeight();
 
-    fab.addEventListener('click', () => toggleModal(true));
-
-    // add close handler on modal handle tap to close
-    const modal = ensureModal();
-    modal.addEventListener('click', (ev) => {
-      // close modal if background or modal-handle clicked
-      if (ev.target === modal || ev.target.classList.contains('modal-handle')) toggleModal(false);
-    });
-
-    // add close button in modal body if none
-    if (!document.getElementById('closeEditorMobileBtn')) {
-      const closeBtn = document.createElement('button');
-      closeBtn.id = 'closeEditorMobileBtn';
-      closeBtn.className = 'btn';
-      closeBtn.textContent = 'Fechar';
-      const body = modal.querySelector('.modal-body');
-      // append at top-right
-      const wrapper = document.createElement('div');
-      wrapper.style.display='flex';
-      wrapper.style.justifyContent='flex-end';
-      wrapper.style.marginBottom='8px';
-      wrapper.appendChild(closeBtn);
-      body.insertBefore(wrapper, body.firstChild);
-      closeBtn.addEventListener('click', () => toggleModal(false));
+    // Força exibir o painel de controles (caso alguma regra CSS anterior o esconda)
+    const ctrl = document.querySelector('.controls');
+    if (ctrl) {
+      ctrl.style.display = 'block';
     }
 
-    // adjust on orientation change / resize
+    // Reajusta em mudanças de orientação/tamanho
     window.addEventListener('orientationchange', () => {
-      setTimeout(() => { adjustCanvasHeight(); }, 300);
+      setTimeout(() => { adjustCanvasHeight(); }, 250);
     });
     window.addEventListener('resize', () => adjustCanvasHeight());
   }
 
-  // run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => initMobileUX());
   } else initMobileUX();
-
 })();
-
-
     </script>
+
     <script>
 /* Estrelas minimalistas */
   function generateMinimalStars() {
@@ -2765,5 +2959,92 @@ async function applyDesignToShirt() {
 
         spawnRareComet();
     </script>
+
+    <!-- SAFE mobile-FAB wiring (does not depend on early DOM queries) -->
+    <script>
+      // This script ensures the quick FAB opens the mobile-panel safely (scoped, after DOM ready).
+      document.addEventListener('DOMContentLoaded', () => {
+        const mobileFab = document.getElementById('mobileFab');
+        if (!mobileFab) return;
+
+        // Reuse panelContents defined earlier and create a safe loader that scopes its queries
+        function openMobilePanel(panelName) {
+          const panelEl = document.getElementById('mobilePanel');
+          const contentEl = document.getElementById('mobilePanelContent');
+          if (!panelEl || !contentEl) return;
+          contentEl.innerHTML = panelContents[panelName] || '';
+
+          // Scoped helper to add handlers (works even if earlier loadMobilePanel didn't run)
+          if (panelName === 'shirt') {
+            contentEl.querySelectorAll('.mobile-shirt-type').forEach(btn => {
+              btn.addEventListener('click', function() {
+                contentEl.querySelectorAll('.mobile-shirt-type').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentShirtType = this.dataset.type;
+                createShirt();
+                panelEl.classList.remove('active');
+              });
+            });
+          }
+
+          if (panelName === 'color') {
+            contentEl.querySelectorAll('.mobile-color').forEach(btn => {
+              btn.addEventListener('click', function() {
+                contentEl.querySelectorAll('.mobile-color').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentColor = this.dataset.color;
+                const ci = document.getElementById('customColorInput');
+                const cp = document.getElementById('colorPicker');
+                if (ci) ci.value = currentColor;
+                if (cp) cp.value = currentColor;
+                scheduleTextureUpdate();
+                panelEl.classList.remove('active');
+              });
+            });
+          }
+
+          if (panelName === 'view') {
+            contentEl.querySelectorAll('.mobile-angle').forEach(btn => {
+              btn.addEventListener('click', function() {
+                contentEl.querySelectorAll('.mobile-angle').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const angle = parseInt(this.dataset.angle, 10);
+                if (shirt) shirt.rotation.y = (angle * Math.PI) / 180;
+                panelEl.classList.remove('active');
+              });
+            });
+          }
+
+          if (panelName === 'design') {
+            const mobileFile = contentEl.querySelector('#mobileImageUpload');
+            if (mobileFile) mobileFile.addEventListener('change', handleImageUpload);
+            const mobileTextBtn = contentEl.querySelector('#mobileTextOpenBtn');
+            if (mobileTextBtn) mobileTextBtn.addEventListener('click', () => {
+              openTextModal();
+              panelEl.classList.remove('active');
+            });
+          }
+
+          if (panelName === 'actions') {
+            const applyBtn = contentEl.querySelector('#mobileApply');
+            const downloadBtn = contentEl.querySelector('#mobileDownload');
+            const resetBtn = contentEl.querySelector('#mobileReset');
+            if (applyBtn) applyBtn.addEventListener('click', () => { applyDesignToShirt(); panelEl.classList.remove('active'); });
+            if (downloadBtn) downloadBtn.addEventListener('click', () => { downloadImage(); panelEl.classList.remove('active'); });
+            if (resetBtn) resetBtn.addEventListener('click', () => { resetDesign(); panelEl.classList.remove('active'); });
+          }
+
+          // show panel
+          panelEl.classList.add('active');
+        }
+
+        // Open the shirt tab by default when tapping the FAB
+        mobileFab.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          openMobilePanel('shirt');
+        });
+      });
+    </script>
+
 </body>
 </html>
