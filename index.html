@@ -8,6 +8,8 @@
     <!-- THREE / GLTF / Lottie -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- SkeletonUtils para clonagem segura de modelos com esqueleto/skin -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.14/lottie.min.js"></script>
 
     <!-- Iconify -->
@@ -993,9 +995,65 @@
         right: 10px;
         bottom: 90px;
     }
+
+    /* Faz os tipos de camisa ficarem empilhados (mais tocáveis) */
+    .shirt-types {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .shirt-types .shirt-btn {
+        width: 100%;
+        padding: 0.85rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    /* Espaçamento entre os botões de ângulo e maior área de toque */
+    .angle-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    .angle-buttons .angle-btn {
+        padding: 0.7rem 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    /* Aumenta os botões principais e coloca margem entre eles */
+    .controls > .btn,
+    .controls > .btn.btn-secondary {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.8rem;
+        padding: 0.95rem;
+        border-radius: 10px;
+    }
+
+    /* Ajuste do painel de ações (o botão rotacao continua centralizado e com maior padding) */
+    #rotate360Btn {
+        padding: 0.85rem;
+        width: 100%;
+        margin-bottom: 0.8rem;
+        border-radius: 10px;
+    }
+
+    /* Botões de upload / front/back na seção "Adicionar Design" */
+    .upload-btn-group {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+    .upload-btn {
+        padding: 0.9rem;
+    }
+
+    /* Evita que controles fiquem muito juntos quando dentro de modal/mobile panel clones */
+    .mobile-panel .control-group,
+    .mobile-panel .element-extra-controls {
+        margin-bottom: 0.8rem;
+    }
 }
 
-/* Floating quick FAB for opening editor on mobile */
+/* Floating quick FAB for opening editor */
 .mobile-fab {
     position: fixed;
     right: 18px;
@@ -1535,7 +1593,7 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
     <script>
         const SHIRT_MODELS = {
             polo: './assets/models/collar.glb',
-            normal: './assets/models/normal.glb',
+            normal: './assets/models/camisateste2.glb',
             long: './assets/models/long.glb'
         };
         const MODEL_CONFIG = { scale:2.0, position:{x:0,y:0,z:0}, rotation:{x:0,y:Math.PI,z:0} };
@@ -1582,6 +1640,51 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
 
         let resizing = null;
         let rotating = null;
+
+        // ---- Helpers para liberar geometria / materiais ----
+        function disposeMaterial(mat) {
+            if (!mat) return;
+            if (Array.isArray(mat)) {
+                mat.forEach(m => disposeMaterial(m));
+                return;
+            }
+            try {
+                if (mat.map) { mat.map.dispose(); mat.map = null; }
+                if (mat.lightMap) { mat.lightMap.dispose(); mat.lightMap = null; }
+                if (mat.bumpMap) { mat.bumpMap.dispose(); mat.bumpMap = null; }
+                if (mat.normalMap) { mat.normalMap.dispose(); mat.normalMap = null; }
+                if (mat.specularMap) { mat.specularMap.dispose(); mat.specularMap = null; }
+                if (mat.envMap) { mat.envMap.dispose(); mat.envMap = null; }
+                if (typeof mat.dispose === 'function') mat.dispose();
+            } catch (e) { console.warn('disposeMaterial erro', e); }
+        }
+
+        function disposeObject(obj) {
+            if (!obj) return;
+            obj.traverse((n) => {
+                if (n.isMesh) {
+                    try {
+                        if (n.geometry) {
+                            n.geometry.dispose();
+                            n.geometry = null;
+                        }
+                    } catch (e) { /* ignore */ }
+                    try {
+                        if (n.material) {
+                            disposeMaterial(n.material);
+                            n.material = null;
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+            });
+        }
+
+        function removeAndDisposeShirt() {
+            if (!shirt) return;
+            try { scene.remove(shirt); } catch(e){}
+            try { disposeObject(shirt); } catch(e){ console.warn('Erro ao dar dispose do modelo anterior', e); }
+            shirt = null;
+        }
 
         function safeDisposeTexture(tex) {
             try {
@@ -1682,10 +1785,12 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
 
             createShirt();
 
-            canvas.addEventListener('mousedown', onMouseDown);
-            canvas.addEventListener('mousemove', onMouseMove);
-            canvas.addEventListener('mouseup', onMouseUp);
-            canvas.addEventListener('wheel', onWheel, { passive:false });
+        // substitua os listeners mouse por pointer-based (no init)
+canvas.addEventListener('pointerdown', onCanvasPointerDown);
+canvas.addEventListener('pointermove', onCanvasPointerMove);
+canvas.addEventListener('pointerup', onCanvasPointerUp);
+canvas.addEventListener('pointercancel', onCanvasPointerUp);
+canvas.addEventListener('wheel', onWheel, { passive:false });
 
             document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
 
@@ -1744,8 +1849,10 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
             maxCameraZ = initialCameraZ * 4;
         }
 
+        // Substituída: createShirt com remoção segura e clonagem via SkeletonUtils
         function createShirt() {
-            if (shirt) scene.remove(shirt);
+            // remove modelo antigo por segurança e libera memória
+            removeAndDisposeShirt();
 
             if (!useGLBModels) {
                 createDefaultShirt();
@@ -1754,13 +1861,27 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
 
             const modelPath = SHIRT_MODELS[currentShirtType];
 
+            // se já temos o modelo original carregado (cached), clonamos com SkeletonUtils
             if (loadedModels[currentShirtType]) {
-                shirt = loadedModels[currentShirtType].clone();
+                try {
+                    if (typeof THREE.SkeletonUtils !== 'undefined') {
+                        shirt = THREE.SkeletonUtils.clone(loadedModels[currentShirtType]);
+                    } else {
+                        shirt = loadedModels[currentShirtType].clone(true);
+                    }
+                } catch (e) {
+                    console.warn('Clone via SkeletonUtils falhou, usando clone simples', e);
+                    shirt = loadedModels[currentShirtType].clone(true);
+                }
+
                 applyColorToModel(shirt, currentColor);
                 const targetY = currentSide === 'front' ? 0 : Math.PI;
                 shirt.rotation.set(MODEL_CONFIG.rotation.x, targetY, MODEL_CONFIG.rotation.z);
                 shirt.position.set(MODEL_CONFIG.position.x, MODEL_CONFIG.position.y, MODEL_CONFIG.position.z);
-                shirt.scale.set(MODEL_CONFIG.scale, MODEL_CONFIG.scale, MODEL_CONFIG.scale);
+                const mobileScaleFactor = (window.innerWidth <= 768) ? 0.6 : 1.0;
+                const appliedScale = MODEL_CONFIG.scale * mobileScaleFactor;
+                shirt.scale.set(appliedScale, appliedScale, appliedScale);
+
                 shirt.traverse((child) => {
                     if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
                 });
@@ -1770,6 +1891,7 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
                 return;
             }
 
+            // loader lazy init
             if (!gltfLoader && typeof THREE.GLTFLoader !== 'undefined') {
                 gltfLoader = new THREE.GLTFLoader();
             }
@@ -1778,14 +1900,29 @@ if (window.innerWidth <= 768 && mobilePanel && mobilePanelContent) {
                 gltfLoader.load(
                     modelPath,
                     (gltf) => {
-                        shirt = gltf.scene;
-                        loadedModels[currentShirtType] = gltf.scene.clone();
+                        // armazena a cena original para reuso (não o clone)
+                        loadedModels[currentShirtType] = gltf.scene;
+
+                        // clone para usar na cena (não adicionar a referência direta)
+                        try {
+                            if (typeof THREE.SkeletonUtils !== 'undefined') {
+                                shirt = THREE.SkeletonUtils.clone(gltf.scene);
+                            } else {
+                                shirt = gltf.scene.clone(true);
+                            }
+                        } catch (e) {
+                            console.warn('Clone via SkeletonUtils falhou no load, usando clone simples', e);
+                            shirt = gltf.scene.clone(true);
+                        }
 
                         applyColorToModel(shirt, currentColor);
                         const targetY = currentSide === 'front' ? 0 : Math.PI;
                         shirt.rotation.set(MODEL_CONFIG.rotation.x, targetY, MODEL_CONFIG.rotation.z);
                         shirt.position.set(MODEL_CONFIG.position.x, MODEL_CONFIG.position.y, MODEL_CONFIG.position.z);
-                        shirt.scale.set(MODEL_CONFIG.scale, MODEL_CONFIG.scale, MODEL_CONFIG.scale);
+
+                        const mobileScaleFactor = (window.innerWidth <= 768) ? 0.6 : 1.0;
+                        const appliedScale = MODEL_CONFIG.scale * mobileScaleFactor;
+                        shirt.scale.set(appliedScale, appliedScale, appliedScale);
 
                         shirt.traverse((child) => {
                             if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
@@ -2483,33 +2620,27 @@ ctx.imageSmoothingQuality = 'high';
 async function applyDesignToShirt() {
     if (!shirt) return;
     const designCanvasEl = document.getElementById('designCanvas');
+    if (!designCanvasEl) return;
     const designRect = designCanvasEl.getBoundingClientRect();
     if (designRect.width === 0 || designRect.height === 0) return;
 
-    // choose safe size
     const maxTextureSize = (renderer && renderer.capabilities && renderer.capabilities.maxTextureSize) ? renderer.capabilities.maxTextureSize : 8192;
-    const preferredBase = 2048; // safe default
+    const preferredBase = 2048;
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
     const targetW = Math.min(Math.round(preferredBase * DPR), maxTextureSize);
     const targetH = Math.min(Math.round(preferredBase * DPR), maxTextureSize);
 
     const canvas = document.createElement('canvas');
-    canvas.width = targetW;
-    canvas.height = targetH;
+    canvas.width = targetW; canvas.height = targetH;
     const ctx = canvas.getContext('2d', { alpha: true });
     ctx.imageSmoothingEnabled = true;
     try { ctx.imageSmoothingQuality = 'high'; } catch (e){}
 
-    // fill background with shirt color to simulate print area (optional)
+    // background fill
     ctx.fillStyle = currentColor || '#ffffff';
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    // draw front and back side side-by-side (keeps compatibility with your UV layout)
-    const bothElements = [
-        { side: 'front', elements: designElements.front },
-        { side: 'back', elements: designElements.back }
-    ];
-
+    // load elements images
     const allElements = [...designElements.front, ...designElements.back];
     const loadPromises = allElements.map(el => {
         if (el.type === 'image') {
@@ -2530,12 +2661,7 @@ async function applyDesignToShirt() {
                         cacheItem.onloadCallbacks.forEach(cb => cb({ id: el.id, img }));
                         cacheItem.onloadCallbacks = [];
                     };
-                    img.onerror = () => {
-                        cacheItem.loaded = true; cacheItem.img = null;
-                        resolve({ id: el.id, img: null });
-                        cacheItem.onloadCallbacks.forEach(cb => cb({ id: el.id, img: null }));
-                        cacheItem.onloadCallbacks = [];
-                    };
+                    img.onerror = () => { cacheItem.loaded = true; cacheItem.img = null; resolve({ id: el.id, img: null }); };
                     img.src = src;
                 });
             }
@@ -2547,75 +2673,101 @@ async function applyDesignToShirt() {
     const imgMap = new Map();
     loaded.forEach(r => { if (r && r.img) imgMap.set(r.id, r.img); });
 
-    const finalCanvasW = canvas.width;
-    const finalCanvasH = canvas.height;
-    const sxHalf = (finalCanvasW / 2) / designRect.width;
-    const sy = finalCanvasH / designRect.height;
-    const sAvg = (sxHalf + sy) / 2;
-
-    bothElements.forEach(bucket => {
-        // >>> ALTERAÇÃO CRÍTICA: algumas UVs têm a frente no lado direito do atlas.
-        // desenhar FRONT na metade DIREITA e BACK na metade ESQUERDA corrige o espelhamento observado.
-        const offsetX = (bucket.side === 'front') ? (finalCanvasW / 2) : 0;
-
-        const elements = bucket.elements || [];
-        elements.forEach(element => {
-            ctx.save();
-
-            const elW_editor = (element.data.width || 100) * (element.scaleX || element.scale || 1);
-            const elH_editor = (element.data.height || 100) * (element.scaleY || element.scale || 1);
-
-            const centerX_editor = element.x + elW_editor / 2;
-            const centerY_editor = element.y + elH_editor / 2;
-
-            const centerX_tex = offsetX + centerX_editor * sxHalf;
-            const centerY_tex = centerY_editor * sy;
-
-            const elW_tex = elW_editor * sxHalf;
-            const elH_tex = elH_editor * sy;
-
-            ctx.translate(centerX_tex, centerY_tex);
-            ctx.rotate((element.rotation || 0) * Math.PI / 180);
-
-            if (element.type === 'image') {
-                const img = imgMap.get(element.id);
-                if (img) {
-                    try {
-                        ctx.drawImage(img, -elW_tex / 2, -elH_tex / 2, elW_tex, elH_tex);
-                    } catch (e) {
-                        console.warn('Erro desenhando imagem no canvas de textura', e);
-                    }
-                }
-            } else if (element.type === 'text') {
-                const fontSize_editor = element.data.size || 24;
-                const fontSize_tex = Math.max(6, Math.round(fontSize_editor * sAvg));
-                ctx.font = `${fontSize_tex}px ${element.data.font || 'Arial'}`;
-                ctx.fillStyle = element.data.color || '#000';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(element.data.text, 0, 0);
+    // detect mesh with largest UV bbox area
+    function detectPrimaryMesh() {
+        if (!shirt || !shirt.traverse) return null;
+        let best = null;
+        shirt.traverse((child) => {
+            if (!child.isMesh || !child.geometry || !child.geometry.attributes || !child.geometry.attributes.uv) return;
+            const uv = child.geometry.attributes.uv;
+            let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity;
+            for (let i = 0; i < uv.count; i++) {
+                const u = uv.getX(i), v = uv.getY(i);
+                if (u < minU) minU = u; if (v < minV) minV = v;
+                if (u > maxU) maxU = u; if (v > maxV) maxV = v;
             }
-
-            ctx.restore();
+            const spanU = maxU - minU, spanV = maxV - minV;
+            const area = Math.max(0, spanU) * Math.max(0, spanV);
+            if (isFinite(area) && area > 0) {
+                if (!best || area > best.area) {
+                    best = { mesh: child, minU, maxU, minV, maxV, spanU, spanV, area };
+                }
+            }
         });
-    });
-
-    // Create THREE texture
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.flipY = false;
-    if (THREE && THREE.sRGBEncoding) texture.encoding = THREE.sRGBEncoding;
-
-    if (textureFlipX) {
-        texture.repeat.set(-1, 1);
-        texture.offset.x = 1;
-    } else {
-        texture.repeat.set(1,1);
-        texture.offset.x = 0;
+        return best;
     }
 
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    const primary = detectPrimaryMesh();
 
+    // compute rect to draw into (in canvas pixels)
+    let drawRect = null;
+    if (primary && primary.spanU > 0.01 && primary.spanV > 0.01) {
+        const uMin = Math.max(0, primary.minU), uMax = Math.min(1, primary.maxU);
+        const vMin = Math.max(0, primary.minV), vMax = Math.min(1, primary.maxV);
+        const rectX = Math.round(uMin * canvas.width);
+        const rectW = Math.max(1, Math.round((uMax - uMin) * canvas.width));
+        const rectH = Math.max(1, Math.round((vMax - vMin) * canvas.height));
+        const rectY = Math.round((1 - vMax) * canvas.height);
+        drawRect = { x: rectX, y: rectY, w: rectW, h: rectH };
+    } else {
+        // fallback to half-atlas behavior
+        drawRect = { x: Math.round(canvas.width/2), y:0, w: Math.round(canvas.width/2), h: canvas.height };
+    }
+
+    // helper draw
+    function drawElementIntoRect(element, rect) {
+        const elW_editor = (element.data.width || 100) * (element.scaleX || element.scale || 1);
+        const elH_editor = (element.data.height || 100) * (element.scaleY || element.scale || 1);
+        const centerX_editor = element.x + elW_editor/2;
+        const centerY_editor = element.y + elH_editor/2;
+        const sx = rect.w / designRect.width;
+        const sy = rect.h / designRect.height;
+        const centerX_tex = rect.x + centerX_editor * sx;
+        const centerY_tex = rect.y + centerY_editor * sy;
+        const elW_tex = elW_editor * sx;
+        const elH_tex = elH_editor * sy;
+
+        ctx.save();
+        ctx.translate(centerX_tex, centerY_tex);
+        ctx.rotate((element.rotation || 0) * Math.PI / 180);
+
+        if (element.type === 'image') {
+            const img = imgMap.get(element.id);
+            if (img) {
+                try { ctx.drawImage(img, -elW_tex/2, -elH_tex/2, elW_tex, elH_tex); } catch(e){ console.warn(e); }
+            }
+        } else if (element.type === 'text') {
+            const fontSize_editor = element.data.size || 24;
+            const fontSize_tex = Math.max(6, Math.round(fontSize_editor * ((sx+sy)/2)));
+            ctx.font = `${fontSize_tex}px ${element.data.font || 'Arial'}`;
+            ctx.fillStyle = element.data.color || '#000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(element.data.text, 0, 0);
+        }
+        ctx.restore();
+    }
+
+    // draw front/back into same drawRect (front/back separation not necessary if primary mesh covers torso)
+    designElements.front.forEach(el => drawElementIntoRect(el, drawRect));
+    designElements.back.forEach(el => drawElementIntoRect(el, drawRect));
+
+    // create texture (mirror if needed)
+    let finalCanvas = canvas;
+    if (textureFlipX) {
+        const mirror = document.createElement('canvas');
+        mirror.width = canvas.width; mirror.height = canvas.height;
+        const mctx = mirror.getContext('2d');
+        mctx.translate(mirror.width, 0); mctx.scale(-1,1);
+        mctx.drawImage(canvas, 0, 0);
+        finalCanvas = mirror;
+    }
+
+    const texture = new THREE.CanvasTexture(finalCanvas);
+    texture.flipY = false;
+    if (THREE && THREE.sRGBEncoding) texture.encoding = THREE.sRGBEncoding;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
     texture.generateMipmaps = false;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
@@ -2623,27 +2775,27 @@ async function applyDesignToShirt() {
     texture.anisotropy = Math.min(maxAniso || 1, 16);
     texture.needsUpdate = true;
 
-    // Substitui materiais (mantive sua lógica)
+    // apply to primary mesh only (others get plain colored material)
+    const baseParams = { roughness: 0.65, metalness: 0.02 };
     if (shirt && shirt.traverse) {
         shirt.traverse((child) => {
-            if (child.isMesh) {
-                try { if (child.material && child.material.map) child.material.map.dispose(); } catch(e){}
-                child.material = new THREE.MeshStandardMaterial({
-                    map: texture,
-                    color: 0xffffff,
-                    roughness: 0.65,
-                    metalness: 0.02,
-                    transparent: true,
-                    side: THREE.FrontSide
-                });
-                child.material.needsUpdate = true;
+            if (!child.isMesh) return;
+            try { if (child.material && child.material.map) child.material.map.dispose(); } catch(e){}
+            if (primary && child === primary.mesh) {
+                child.material = new THREE.MeshStandardMaterial(Object.assign({}, baseParams, {
+                    map: texture, color: 0xffffff, transparent: true, side: THREE.DoubleSide
+                }));
+            } else {
+                child.material = new THREE.MeshStandardMaterial(Object.assign({}, baseParams, {
+                    color: new THREE.Color(currentColor || '#ffffff'), metalness: 0.02
+                }));
             }
+            child.material.needsUpdate = true;
         });
     } else if (shirt && shirt.material) {
+        // fallback: apply to whole model
         try { if (shirt.material.map) shirt.material.map.dispose(); } catch(e){}
-        shirt.material = new THREE.MeshStandardMaterial({
-            map: texture, color:0xffffff, roughness:0.7, metalness:0.1, transparent: true
-        });
+        shirt.material = new THREE.MeshStandardMaterial({ map: texture, color:0xffffff, roughness:0.7, metalness:0.1, transparent:true, side:THREE.DoubleSide });
         shirt.material.needsUpdate = true;
     }
 }
@@ -2749,16 +2901,48 @@ async function applyDesignToShirt() {
             scheduleTextureUpdate();
         });
 
-        function onMouseDown(e) { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }
-        function onMouseMove(e) {
-            if (!isDragging || !shirt) return;
-            const deltaX = e.clientX - previousMousePosition.x;
-            const deltaY = e.clientY - previousMousePosition.y;
-            shirt.rotation.y += deltaX * 0.01;
-            shirt.rotation.x += deltaY * 0.01;
-            previousMousePosition = { x: e.clientX, y: e.clientY };
-        }
-        function onMouseUp() { isDragging = false; }
+      // Pointer-based camera rotation for canvas3d (mouse + touch)
+let canvasDragPointerId = null;
+let canvasPrevPos = { x:0, y:0 };
+let canvasIsPointerDown = false;
+
+function onCanvasPointerDown(e) {
+    const canvas = document.getElementById('canvas3d');
+    if (!canvas) return;
+    // somente iniciar rotação se o alvo for o canvas (evita conflito com outros elementos)
+    if (e.target !== canvas) return;
+    e.preventDefault();
+    try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    canvasDragPointerId = e.pointerId;
+    canvasIsPointerDown = true;
+    canvasPrevPos = { x: e.clientX, y: e.clientY };
+}
+
+function onCanvasPointerMove(e) {
+    // ALTERAÇÃO: agora só rotaciona em Y (360°) — removido ajuste em X (vertical)
+    if (!canvasIsPointerDown || e.pointerId !== canvasDragPointerId) return;
+    if (!shirt) return;
+    e.preventDefault();
+    const deltaX = e.clientX - canvasPrevPos.x;
+    // somente afetar a rotação em Y (gira 360)
+    shirt.rotation.y += deltaX * 0.01;
+    // normaliza para evitar valores muito grandes
+    const twoPi = Math.PI * 2;
+    if (Math.abs(shirt.rotation.y) > twoPi) {
+        shirt.rotation.y = shirt.rotation.y % twoPi;
+    }
+    // atualiza só a posição X anterior (importante para continuidade)
+    canvasPrevPos.x = e.clientX;
+    canvasPrevPos.y = e.clientY;
+}
+
+function onCanvasPointerUp(e) {
+    if (e.pointerId === canvasDragPointerId) {
+        try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch(err){}
+        canvasDragPointerId = null;
+        canvasIsPointerDown = false;
+    }
+}
 
         function onWheel(e) {
             e.preventDefault();
